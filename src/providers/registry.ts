@@ -32,20 +32,20 @@ export type ProviderDef = {
 export const PROVIDERS: Record<ProviderId, ProviderDef> = {
   offline: {
     id: 'offline',
-    name: 'VileDocx Offline Atom (1M Thinking)',
+    name: 'VileDocx Offline Atom (1M Trained LLM)',
     logo: '⚡',
-    description: '100% in-browser 1M offline model with reasoning deliberation',
+    description: 'Real ~1M-parameter character-level GPT trained from scratch and run entirely in your browser',
     keyLabel: 'API key (None needed)',
     keyPlaceholder: 'No API key needed (Runs in browser)',
     requiresKey: false,
-    route: 'In-Browser (100% Offline · Zero Latency)',
+    route: 'In-Browser (100% Offline · Real Neural Inference)',
     models: [
-      { id: 'viledocx-atom-1m-thinking', label: 'VileDocx Atom 1M (Thinking & Offline)' },
-      { id: 'viledocx-atom-1m-fast', label: 'VileDocx Atom 1M Fast (Instant Response)' },
+      { id: 'viledocx-atom-1m-thinking', label: 'VileDocx Atom 1M (Trained · Thinking Trace)' },
+      { id: 'viledocx-atom-1m-fast', label: 'VileDocx Atom 1M Fast (Trained · Direct Answer)' },
     ],
     defaultModel: 'viledocx-atom-1m-thinking',
     instructions:
-      'Runs locally inside your browser with 0 API keys and zero internet requirement. Simulates step-by-step reasoning deliberations.',
+      'Atom 1M is a genuine Transformer language model (~470k–1M parameters) trained from scratch and shipped as Float16 weights. It performs real token-by-token neural inference locally — 0 API keys, 0 network calls after first load. Expect short, charming answers; connect a cloud API in Settings for deep intelligence.',
   },
   gemini: {
     id: 'gemini',

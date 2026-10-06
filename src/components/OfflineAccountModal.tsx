@@ -298,11 +298,11 @@ export function OfflineAccountModal({
                   </span>
 
                   <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-snug">
-                    Before using Aplx
+                    Before using VileDocx
                   </h2>
 
                   <p className="text-xs sm:text-[13px] text-[#ccd8f0] leading-relaxed pt-1">
-                    Please review the Privacy & Legal Notice before continuing. It explains how Aplx handles credentials and data, your responsibilities, third-party provider processing, and important legal limitations.
+                    Please review the Privacy & Legal Notice before continuing. It explains how VileDocx handles credentials and data, your responsibilities, third-party provider processing, and important legal limitations.
                   </p>
                 </div>
 
@@ -332,7 +332,7 @@ export function OfflineAccountModal({
                   </button>
 
                   <p className="text-[10.5px] text-[#7d90b2] leading-tight pt-1">
-                    By continuing to use Aplx, you acknowledge that you have reviewed this notice. Nothing in these terms limits rights or protections that cannot legally be waived.
+                    By continuing to use VileDocx, you acknowledge that you have reviewed this notice. Nothing in these terms limits rights or protections that cannot legally be waived.
                   </p>
                 </div>
               </div>

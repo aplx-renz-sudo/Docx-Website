@@ -1,5 +1,5 @@
 /**
- * Aplx Security Guard & Hardening Engine
+ * VileDocx Security Guard & Hardening Engine
  * 
  * 1. Anti-DDoS & Flood Protection (Client-side rate-limiting, request throttling, burst defense)
  * 2. Cryptographic Profile Integrity & Non-Crackable Salted Hashing (SHA-256 via WebCrypto API)
@@ -233,7 +233,7 @@ export async function hashProfilePin(
 ): Promise<{ hash: string; salt: string }> {
   const salt = existingSalt || generateCryptographicSalt();
   const encoder = new TextEncoder();
-  const pinData = encoder.encode(`aplx_shield_v1:${salt}:${pin.trim()}`);
+  const pinData = encoder.encode(`viledocx_shield_v1:${salt}:${pin.trim()}`);
 
   if (window.crypto && window.crypto.subtle) {
     // Compute SHA-256 digest
@@ -246,7 +246,7 @@ export async function hashProfilePin(
 
   // Simple fallback hash if subtle crypto is unavailable
   let hash = 0;
-  const combined = `aplx:${salt}:${pin}`;
+  const combined = `viledocx:${salt}:${pin}`;
   for (let i = 0; i < combined.length; i++) {
     hash = (hash << 5) - hash + combined.charCodeAt(i);
     hash |= 0;
@@ -277,7 +277,18 @@ export async function verifyProfilePin(
   }
 
   const { hash: computedHash } = await hashProfilePin(enteredPin, salt);
-  const isMatch = computedHash === storedHash;
+  let isMatch = computedHash === storedHash;
+
+  // Legacy fallback check if previously hashed with aplx prefix
+  if (!isMatch && window.crypto && window.crypto.subtle) {
+    try {
+      const legacyPinData = new TextEncoder().encode(`aplx_shield_v1:${salt}:${enteredPin.trim()}`);
+      const legacyBuffer = await window.crypto.subtle.digest('SHA-256', legacyPinData);
+      if (bufferToHex(legacyBuffer) === storedHash) {
+        isMatch = true;
+      }
+    } catch {}
+  }
 
   if (isMatch) {
     // Reset failed counter
@@ -303,7 +314,7 @@ export async function verifyProfilePin(
 }
 
 /**
- * Returns comprehensive security status and audit verification for Aplx.
+ * Returns comprehensive security status and audit verification for VileDocx.
  */
 export function getSecurityAuditReport(): SecurityAuditReport {
   const now = Date.now();

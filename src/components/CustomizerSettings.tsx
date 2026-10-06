@@ -53,23 +53,23 @@ import { PetArtwork } from './PetArtwork';
 import { sounds } from '../lib/audio';
 
 export const THEME_PRESETS: { id: ThemePreset; name: string; desc: string; colors: string[] }[] = [
-  { id: 'black', name: 'Pure Black (OLED)', desc: 'Ultra-deep pure darkness', colors: ['#030303', '#121212', '#9eb8ff'] },
-  { id: 'midnight', name: 'Midnight Navy', desc: 'Cosmic deep oceanic blue', colors: ['#050915', '#0c162d', '#7ba4ff'] },
-  { id: 'cyberpunk', name: 'Cyberpunk Neon', desc: 'Futuristic neon magenta & cyan', colors: ['#08040d', '#200e31', '#ff007f'] },
-  { id: 'emerald', name: 'Matrix Emerald', desc: 'Deep bioluminescent emerald', colors: ['#020b06', '#062013', '#00f59b'] },
-  { id: 'nebula', name: 'Nebula Purple', desc: 'Amethyst cosmic stardust', colors: ['#0a0514', '#1f1035', '#b388ff'] },
-  { id: 'solar', name: 'Solar Flare', desc: 'Warm celestial amber & gold', colors: ['#0d0803', '#261505', '#ff9f43'] },
-  { id: 'crimson', name: 'Crimson Velvet', desc: 'Deep ruby and rose nebula', colors: ['#0d0406', '#260c13', '#ff4757'] },
-  { id: 'polar', name: 'Polar Frost', desc: 'Clean high-contrast titanium dark', colors: ['#090b0e', '#131922', '#70a1ff'] },
+  { id: 'black', name: 'Monochrome Black & White (Default)', desc: 'Executive high-contrast black (#000000) & pure white typography', colors: ['#000000', '#141414', '#ffffff'] },
+  { id: 'midnight', name: 'Charcoal Minimal', desc: 'Refined deep charcoal & off-white studio aesthetic', colors: ['#0a0a0a', '#181818', '#f5f5f5'] },
+  { id: 'polar', name: 'Titanium Dark', desc: 'Clean engineering titanium monochrome and crisp silver', colors: ['#090909', '#171717', '#ffffff'] },
+  { id: 'emerald', name: 'Slate Monochrome', desc: 'Professional technical slate and high-contrast white', colors: ['#09090b', '#18181b', '#e4e4e7'] },
+  { id: 'cyberpunk', name: 'Obsidian Velvet', desc: 'Ultra-deep obsidian and pure white accents', colors: ['#050505', '#121212', '#ffffff'] },
+  { id: 'nebula', name: 'Graphite Pro', desc: 'Sleek carbon graphite with bright white indicators', colors: ['#000000', '#111111', '#ffffff'] },
+  { id: 'solar', name: 'Warm Charcoal', desc: 'Subtle warm neutral dark and soft ivory typography', colors: ['#0a0a0a', '#161616', '#f4f4f5'] },
+  { id: 'crimson', name: 'Pitch Black Pro', desc: 'Pure void blacks and striking white typography', colors: ['#000000', '#0f0f0f', '#ffffff'] },
 ];
 
 export const QUICK_GRADIENT_PRESETS = [
-  { name: 'Cosmic Nebula', start: '#0e0622', end: '#240b49', angle: 135, accent: '#b388ff' },
-  { name: 'Cyber Sunset', start: '#1f0322', end: '#5a0038', angle: 120, accent: '#ff007f' },
-  { name: 'Emerald Aurora', start: '#011208', end: '#04341e', angle: 140, accent: '#00f59b' },
-  { name: 'Solar Amber', start: '#190a00', end: '#451f00', angle: 135, accent: '#ff9f43' },
-  { name: 'Oceanic Abyss', start: '#020b1e', end: '#092548', angle: 150, accent: '#38bdf8' },
-  { name: 'Crimson Night', start: '#1c0308', end: '#4a0815', angle: 130, accent: '#ff4757' },
+  { name: 'Pure Monochrome', start: '#000000', end: '#141414', angle: 135, accent: '#ffffff' },
+  { name: 'Executive Charcoal', start: '#0a0a0a', end: '#1f1f23', angle: 120, accent: '#f4f4f5' },
+  { name: 'Deep Obsidian', start: '#050505', end: '#18181b', angle: 140, accent: '#ffffff' },
+  { name: 'Titanium Dark', start: '#09090b', end: '#27272a', angle: 135, accent: '#e4e4e7' },
+  { name: 'Carbon Studio', start: '#000000', end: '#181818', angle: 150, accent: '#ffffff' },
+  { name: 'Minimal Neutral', start: '#0a0a0a', end: '#1a1a1a', angle: 130, accent: '#ffffff' },
 ];
 
 export const PET_LIST: { id: PetId; name: string; desc: string; emoji: string }[] = [
@@ -96,7 +96,7 @@ export const PERSONAS: { id: PersonaId; name: string; desc: string; prompt: stri
     id: 'helpful',
     name: 'Helpful Assistant (Default)',
     desc: 'Balanced, insightful, empathetic, and comprehensive',
-    prompt: 'You are Aplx, a brilliant, private, and precise AI assistant.',
+    prompt: 'You are VileDocx, a brilliant, private, and precise AI assistant.',
   },
   {
     id: 'architect',
@@ -1470,7 +1470,7 @@ export function ThinkingSettings({
           <ThinkingIndicator
             style={preferences.thinkingStyle}
             showTimer={preferences.showThinkingTimer}
-            modelName="Aplx Neural Engine"
+            modelName="VileDocx Neural Engine"
           />
         </div>
       </div>
@@ -1781,7 +1781,7 @@ export function DataManagementSettings({
           <div className="section-kicker">DATA & PRIVACY</div>
           <h2 className="text-xl font-bold text-white tracking-tight">Data Portability & Storage</h2>
           <p className="lead text-xs text-[#8da0c4] mt-1">
-            Your conversations and configuration never touch a remote Aplx database. Export, backup, or import anytime.
+            Your conversations and configuration never touch a remote VileDocx database. Export, backup, or import anytime.
           </p>
         </div>
 
@@ -1859,7 +1859,10 @@ export function DataManagementSettings({
             onClick={() => {
               let storedPref = null;
               try {
-                const raw = localStorage.getItem('aplx_preferences_v1');
+                const raw =
+                  localStorage.getItem('viledocx:preferences:v3') ||
+                  localStorage.getItem('aplx:preferences:v3') ||
+                  localStorage.getItem('aplx_preferences_v1');
                 if (raw) storedPref = JSON.parse(raw);
               } catch {}
               const backup = {
@@ -1871,7 +1874,7 @@ export function DataManagementSettings({
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              a.download = `aplx-system-backup-${Date.now()}.json`;
+              a.download = `viledocx-system-backup-${Date.now()}.json`;
               a.click();
               URL.revokeObjectURL(url);
             }}
@@ -1883,12 +1886,12 @@ export function DataManagementSettings({
           <button
             type="button"
             onClick={() => {
-              const diag = `APLX SYSTEM DIAGNOSTICS REPORT\nGenerated: ${new Date().toLocaleString()}\nUser Agent: ${navigator.userAgent}\nStorage Key Count: ${localStorage.length}\nScreen: ${window.innerWidth}x${window.innerHeight}\nStatus: OK`;
+              const diag = `VILEDOCX SYSTEM DIAGNOSTICS REPORT\nGenerated: ${new Date().toLocaleString()}\nUser Agent: ${navigator.userAgent}\nStorage Key Count: ${localStorage.length}\nScreen: ${window.innerWidth}x${window.innerHeight}\nStatus: OK`;
               const blob = new Blob([diag], { type: 'text/plain' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              a.download = `aplx-diagnostics-${Date.now()}.txt`;
+              a.download = `viledocx-diagnostics-${Date.now()}.txt`;
               a.click();
               URL.revokeObjectURL(url);
             }}
@@ -1951,7 +1954,7 @@ export function DataManagementSettings({
               <span>1. Limitation of Liability & Scope of Responsibility</span>
             </div>
             <p className="text-[11.5px] text-[#8fa1c4] leading-relaxed">
-              To the maximum extent permitted by applicable law, the developer(s), authors, and contributors of <strong>Aplx</strong> (<span className="text-[#c0d2f6]">"the Developer"</span>) are not liable for losses, damages, or claims arising from user configurations, choice of AI providers, submitted prompts, generated outputs, or actions taken in reliance on AI results. Aplx is an open-source client utility; users retain primary control and responsibility over their credentials, operational prompts, and downstream deployments.
+              To the maximum extent permitted by applicable law, the developer(s), authors, and contributors of <strong>VileDocx</strong> (<span className="text-[#c0d2f6]">"the Developer"</span>) are not liable for losses, damages, or claims arising from user configurations, choice of AI providers, submitted prompts, generated outputs, or actions taken in reliance on AI results. VileDocx is an open-source client utility; users retain primary control and responsibility over their credentials, operational prompts, and downstream deployments.
             </p>
           </div>
 
@@ -1970,7 +1973,7 @@ export function DataManagementSettings({
                 3. "AS-IS" & "AS-AVAILABLE"
               </span>
               <p className="text-[11px] text-[#8294b6] leading-normal">
-                Aplx is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind. Nothing in this notice excludes or limits statutory consumer rights that cannot be lawfully waived under applicable law.
+                VileDocx is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind. Nothing in this notice excludes or limits statutory consumer rights that cannot be lawfully waived under applicable law.
               </p>
             </div>
 
@@ -1988,7 +1991,7 @@ export function DataManagementSettings({
                 5. JURISDICTION-AWARE COMPLIANCE
               </span>
               <p className="text-[11px] text-[#8294b6] leading-normal">
-                Users agree to use Aplx in compliance with applicable local and international laws. Mandatory statutory rights under consumer protection and data protection frameworks prevail over conflicting disclaimer terms.
+                Users agree to use VileDocx in compliance with applicable local and international laws. Mandatory statutory rights under consumer protection and data protection frameworks prevail over conflicting disclaimer terms.
               </p>
             </div>
           </div>
@@ -1996,7 +1999,7 @@ export function DataManagementSettings({
           <div className="p-3.5 rounded-xl bg-amber-500/[0.07] border border-amber-500/25 text-[11px] text-amber-200/90 leading-relaxed flex items-start gap-2.5">
             <ShieldAlert size={16} className="text-amber-400 flex-none mt-0.5" />
             <span>
-              <strong>Notice:</strong> This summary describes Aplx's architecture and responsibilities to the maximum extent permitted by applicable law. For complete disclosures including India-specific and international frameworks, please consult the comprehensive Privacy & Legal Notice.
+              <strong>Notice:</strong> This summary describes VileDocx's architecture and responsibilities to the maximum extent permitted by applicable law. For complete disclosures including India-specific and international frameworks, please consult the comprehensive Privacy & Legal Notice.
             </span>
           </div>
         </div>

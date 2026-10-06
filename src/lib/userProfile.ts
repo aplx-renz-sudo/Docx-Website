@@ -1,7 +1,7 @@
 import type { UserProfile } from '../types';
 import { computeDataSignature, sanitizeInputPayload } from './securityGuard';
 
-const PROFILE_KEY = 'aplx:user_profile';
+const PROFILE_KEY = 'viledocx:user_profile';
 
 /**
  * Resizes and center-crops any image to a compact 1:1 square JPEG (< 35KB)
@@ -65,7 +65,7 @@ export function processImageToCompactSquare(
  */
 export function loadUserProfile(): UserProfile | null {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    const raw = localStorage.getItem(PROFILE_KEY) || localStorage.getItem('aplx:user_profile');
     if (raw) {
       const parsed = JSON.parse(raw) as UserProfile;
       if (!parsed || typeof parsed !== 'object') return null;

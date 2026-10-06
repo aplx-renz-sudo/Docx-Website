@@ -1,37 +1,48 @@
-/* APLX game-lobby theme: warm, playable, and deliberately low-key. */
+/* VILEDOCX Monochrome Black & White Theme */
 :root {
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Consolas, Menlo, monospace;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
-  --accent-primary: #83d7ff;
-  --lobby-blue: #83d7ff;
-  --lobby-purple: #a78bfa;
-  --lobby-mint: #6ee7c0;
-  --lobby-panel: rgba(18, 25, 47, .82);
-  --lobby-line: rgba(193, 220, 255, .15);
+  --accent-primary: #ffffff;
 }
 
-html, body { background: #080d20; color: #edf3ff; letter-spacing: -.01em; }
+html, body {
+  background: #000000;
+  color: #ededed;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle, sleek monochrome space canvas */
 .space {
-  background:
-    radial-gradient(ellipse 65% 55% at 14% 8%, rgba(96, 165, 250, .17), transparent 68%),
-    radial-gradient(ellipse 62% 56% at 95% 85%, rgba(167, 139, 250, .17), transparent 70%),
-    linear-gradient(145deg, #090f24 0%, #0e1531 50%, #11102b 100%);
+  background: #000000;
 }
 .space:before {
-  background-image: radial-gradient(rgba(193, 220, 255, .46) .65px, transparent .85px), radial-gradient(rgba(144, 199, 255, .22) .7px, transparent .9px);
-  background-size: 72px 72px, 156px 156px; background-position: 20px 16px, 70px 60px; opacity: .42;
+  display: none;
 }
-.space:after { background: radial-gradient(ellipse at 50% 45%, transparent 18%, rgba(4, 7, 20, .45) 100%); }
+.space:after {
+  display: none;
+}
 
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline-color: var(--lobby-blue); }
-.wordmark, .brand { letter-spacing: -.02em; font-size: 15px; font-weight: 750; }
-.wordmark > span:first-child, .brand-mark { background: linear-gradient(145deg, #69cdfc, #7c86ff); border-radius: 8px; box-shadow: 0 6px 18px rgba(97, 184, 255, .35); }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline-color: rgba(255, 255, 255, 0.6);
+}
 
-/* The shared astral mark — eight motes max, all CSS-composited locally. */
+.wordmark, .brand {
+  letter-spacing: -0.02em;
+  font-size: 15px;
+  font-weight: 700;
+}
+.wordmark > span:first-child, .brand-mark {
+  background: #ffffff;
+  color: #000000;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
+}
+
+/* Monochrome Astral Mark */
 .astral-logo {
   --tilt-x: 0deg;
   --tilt-y: 0deg;
@@ -43,55 +54,183 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   transform-style: preserve-3d;
   perspective: 760px;
 }
-.astral-logo.is-interactive { cursor: pointer; touch-action: manipulation; }
-.astral-logo-art {
-  width: 86%; height: 86%; object-fit: contain; position: relative; z-index: 2;
-  user-select: none; pointer-events: none; mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(circle at center, #000 0 45%, rgba(0,0,0,.92) 57%, transparent 74%);
-  mask-image: radial-gradient(circle at center, #000 0 45%, rgba(0,0,0,.92) 57%, transparent 74%);
-  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1);
-  transition: transform .45s cubic-bezier(.2,.8,.2,1), filter .45s ease;
-  filter: drop-shadow(0 0 18px rgba(91,159,255,.2));
+.astral-logo.is-interactive {
+  cursor: pointer;
+  touch-action: manipulation;
 }
-.astral-logo.is-interactive:hover .astral-logo-art { filter: drop-shadow(0 0 27px rgba(125,174,255,.46)); }
-.astral-logo-glow { position: absolute; inset: 13%; z-index: 0; border-radius: 50%; background: radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(159,218,255,.35), rgba(122,101,255,.17) 36%, transparent 70%); filter: blur(18px); transition: background .25s ease; }
-.astral-logo-orbit { position: absolute; z-index: 1; border: 1px solid rgba(135,213,255,.25); border-radius: 50%; pointer-events: none; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-.astral-logo-orbit-one { inset: 8%; transform: rotateX(65deg) rotateZ(-22deg); }.astral-logo-orbit-two { inset: 20%; border-color: rgba(181,145,255,.22); transform: rotateX(67deg) rotateZ(38deg); }
-.astral-logo.is-interactive:hover .astral-logo-orbit-one { transform: rotateX(65deg) rotateZ(22deg); }.astral-logo.is-interactive:hover .astral-logo-orbit-two { transform: rotateX(67deg) rotateZ(-32deg); }
-.astral-logo-mote { position: absolute; z-index: 3; width: 4px; height: 4px; border-radius: 50%; background: #9be4ff; box-shadow: 0 0 9px 2px rgba(117,209,255,.68); animation: astral-drift 4.6s ease-in-out infinite alternate; pointer-events: none; }
-.mote-1 { top: 17%; left: 22%; animation-delay: -.4s; }.mote-2 { top: 23%; right: 16%; width: 5px; height: 5px; background: #c4a7ff; }.mote-3 { right: 8%; bottom: 33%; animation-delay: -1.5s; }.mote-4 { bottom: 13%; right: 27%; width: 3px; height: 3px; }.mote-5 { bottom: 22%; left: 11%; background: #c4a7ff; animation-delay: -2.3s; }.mote-6 { top: 41%; left: 7%; width: 3px; height: 3px; }.mote-7 { top: 8%; left: 48%; animation-delay: -3.2s; }.mote-8 { bottom: 7%; left: 47%; width: 3px; height: 3px; background: #c4a7ff; }
-@keyframes astral-drift { from { transform: translate3d(-4px, 3px, 0); opacity: .42; } to { transform: translate3d(6px, -7px, 0); opacity: 1; } }
-@keyframes astral-wish { 0% { transform: scale(.95); } 45% { transform: scale(1.08); } 100% { transform: scale(1); } }
-.astral-logo.is-pulsing .astral-logo-art { animation: astral-wish .7s cubic-bezier(.16,1,.3,1); }.astral-logo.is-pulsing .astral-logo-glow { animation: astral-wish .7s cubic-bezier(.16,1,.3,1); filter: blur(13px) brightness(1.7); }
-.astral-logo-mini { display: inline-grid; place-items: center; overflow: hidden; flex: none; border-radius: 8px; background: radial-gradient(circle, rgba(137,204,255,.17), transparent 70%); }.astral-logo-mini img { width: 150%; height: 150%; object-fit: contain; mix-blend-mode: screen; user-select: none; }
+.astral-logo-art {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+  user-select: none;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(circle at center, #000 0 45%, rgba(0,0,0,0.92) 57%, transparent 74%);
+  mask-image: radial-gradient(circle at center, #000 0 45%, rgba(0,0,0,0.92) 57%, transparent 74%);
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.45s ease;
+  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.15));
+}
+.astral-logo.is-interactive:hover .astral-logo-art {
+  filter: drop-shadow(0 0 24px rgba(255, 255, 255, 0.35));
+}
+.astral-logo-glow {
+  position: absolute;
+  inset: 13%;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(255, 255, 255, 0.2), rgba(180, 180, 180, 0.08) 36%, transparent 70%);
+  filter: blur(18px);
+  transition: background 0.25s ease;
+}
+.astral-logo-orbit {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.astral-logo-orbit-one {
+  inset: 8%;
+  transform: rotateX(65deg) rotateZ(-22deg);
+}
+.astral-logo-orbit-two {
+  inset: 20%;
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: rotateX(67deg) rotateZ(38deg);
+}
+.astral-logo.is-interactive:hover .astral-logo-orbit-one {
+  transform: rotateX(65deg) rotateZ(22deg);
+}
+.astral-logo.is-interactive:hover .astral-logo-orbit-two {
+  transform: rotateX(67deg) rotateZ(-32deg);
+}
+.astral-logo-mote {
+  position: absolute;
+  z-index: 3;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.7);
+  animation: astral-drift 4.6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.mote-1 { top: 17%; left: 22%; animation-delay: -0.4s; }
+.mote-2 { top: 23%; right: 16%; width: 5px; height: 5px; background: #e4e4e7; }
+.mote-3 { right: 8%; bottom: 33%; animation-delay: -1.5s; }
+.mote-4 { bottom: 13%; right: 27%; width: 3px; height: 3px; }
+.mote-5 { bottom: 22%; left: 11%; background: #d4d4d8; animation-delay: -2.3s; }
+.mote-6 { top: 41%; left: 7%; width: 3px; height: 3px; }
+.mote-7 { top: 8%; left: 48%; animation-delay: -3.2s; }
+.mote-8 { bottom: 7%; left: 47%; width: 3px; height: 3px; background: #e4e4e7; }
+@keyframes astral-drift {
+  from { transform: translate3d(-4px, 3px, 0); opacity: 0.42; }
+  to { transform: translate3d(6px, -7px, 0); opacity: 1; }
+}
+@keyframes astral-wish {
+  0% { transform: scale(0.95); }
+  45% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.astral-logo.is-pulsing .astral-logo-art {
+  animation: astral-wish 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.astral-logo.is-pulsing .astral-logo-glow {
+  animation: astral-wish 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: blur(13px) brightness(1.7);
+}
+.astral-logo-mini {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  flex: none;
+  border-radius: 8px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 70%);
+}
+.astral-logo-mini img {
+  width: 150%;
+  height: 150%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  user-select: none;
+}
 
-.primary, .nav-launch { background: linear-gradient(135deg, #8ae0ff, #9ca0ff); border: 1px solid rgba(217,248,255,.75); border-radius: 11px; color: #101937; font-size: 12px; font-weight: 750; letter-spacing: -.01em; box-shadow: 0 8px 20px rgba(75,150,255,.22), inset 0 1px rgba(255,255,255,.7); }
-.primary:hover, .nav-launch:hover { background: linear-gradient(135deg, #b3edff, #bdbbff); box-shadow: 0 10px 28px rgba(94,171,255,.36); }
-.secondary { background: rgba(255,255,255,.075); border: 1px solid var(--lobby-line); border-radius: 11px; color: #dbe9ff; box-shadow: inset 0 1px rgba(255,255,255,.08); font-size: 12px; font-weight: 600; }
-.secondary:hover { background: rgba(131,215,255,.13); border-color: rgba(131,215,255,.45); color: #fff; }
+/* Install webapp link - Monochrome */
+.install-webapp-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ededed;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.install-webapp-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.install-webapp-link__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.install-webapp-link__icon {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+.install-webapp-link__title {
+  font-size: 14px;
+  font-weight: 650;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+.install-webapp-link__title span {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font: 700 9px var(--font-mono);
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+.install-webapp-link__url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #a1a1aa;
+  font: 11px var(--font-mono);
+}
+.install-webapp-link__external {
+  flex: none;
+  color: #ffffff;
+}
 
-/* Sidebar becomes a quiet party menu instead of a system panel. */
-.sidebar { width: 276px; padding: 18px 14px; background: rgba(10,15,35,.80); border-right: 1px solid var(--lobby-line); backdrop-filter: blur(28px) saturate(150%); }
-.sidebar:after { content: "GOOD TO SEE YOU"; position: absolute; bottom: 8px; right: 15px; color: rgba(166,205,255,.34); font: 9px var(--font-mono); letter-spacing: .1em; }
-.new-chat { background: linear-gradient(135deg, rgba(117,211,255,.20), rgba(147,127,255,.18)); border-color: rgba(159,220,255,.38); border-radius: 11px; color: #eaf7ff; font-weight: 700; box-shadow: inset 0 1px rgba(255,255,255,.11); }
-.new-chat:hover { background: linear-gradient(135deg, rgba(117,211,255,.30), rgba(147,127,255,.27)) !important; border-color: rgba(174,232,255,.7) !important; }
-.nav-label { color: #8193ba; letter-spacing: .08em; font-size: 10px; }.history, .side-bottom button { border-radius: 9px; color: #adbbd5; }.history:hover, .side-bottom button:hover { background: rgba(151,187,255,.10) !important; color: #f3f8ff !important; }.history.active { background: linear-gradient(90deg, rgba(102,190,255,.18), rgba(159,126,255,.14)); border: 1px solid rgba(157,211,255,.25); color: #f3f8ff; }.side-bottom { border-color: var(--lobby-line); }.web-status span { background: var(--lobby-mint); box-shadow: 0 0 9px rgba(110,231,192,.7); }
-
-.chat { margin-left: 276px; }.chat header { background: rgba(10,15,35,.70); border-color: var(--lobby-line); backdrop-filter: blur(24px) saturate(145%); }.model { background: rgba(255,255,255,.06); border-color: var(--lobby-line); border-radius: 999px; color: #dbeaff; }.model span { background: var(--lobby-mint); box-shadow: 0 0 7px rgba(110,231,192,.7); }.icon { color: #adc0de; border-radius: 9px; }.icon:hover { background: rgba(131,215,255,.12); border-color: rgba(131,215,255,.25); color: #fff !important; }
-
-.messages { max-width: 840px; }.message.model { background: linear-gradient(135deg, rgba(25,34,63,.90), rgba(18,25,48,.82)); border-color: var(--lobby-line); border-radius: 16px; box-shadow: 0 12px 32px rgba(4,8,25,.24), inset 0 1px rgba(255,255,255,.05); }.avatar { border-radius: 11px !important; background: linear-gradient(145deg, rgba(105,205,252,.28), rgba(124,134,255,.24)); border-color: rgba(132,218,255,.42); color: #bdeeff; box-shadow: 0 5px 16px rgba(70,155,255,.18); }.user .avatar { border-radius: 11px !important; background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.16); }.message-meta { color: #adc0da; }.message-meta time { color: #7584a5; }.message-body p { color: #e2eaff; }.message.user .message-body > p, .message.user .message-body > div.user-bubble { background: linear-gradient(135deg, rgba(96,178,255,.16), rgba(148,123,255,.16)); border-color: rgba(160,217,255,.24); border-radius: 16px 16px 5px 16px; color: #f3f7ff; }.message-body code { background: rgba(115,194,255,.10); border-color: rgba(131,215,255,.20); color: #b9ebff; }.message-body blockquote { border-color: var(--lobby-blue); background: rgba(131,215,255,.07); color: #d7e9ff; }.message-tools button:hover { background: rgba(131,215,255,.10); color: #f0f7ff; }.prompt-deck button { background: rgba(27,36,67,.72); border-color: var(--lobby-line); border-radius: 13px; }.prompt-deck button:hover { background: rgba(93,175,255,.13); border-color: rgba(131,215,255,.35); }
-
-.composer-wrap { left: 276px; background: linear-gradient(to top, rgba(8,13,32,.96) 58%, transparent); }.composer { background: rgba(21,29,56,.91); border-color: rgba(187,219,255,.18); border-radius: 18px; box-shadow: 0 18px 50px rgba(4,8,25,.36), inset 0 1px rgba(255,255,255,.07); }.composer:focus-within { border-color: rgba(131,215,255,.62); box-shadow: 0 18px 50px rgba(4,8,25,.4), 0 0 0 3px rgba(131,215,255,.08); }.composer textarea { color: #eff5ff; }.composer textarea::placeholder { color: #8390ad; }.ribbon-pill { background: rgba(255,255,255,.055); border-color: var(--lobby-line); border-radius: 999px; color: #b4c4e1; }.ribbon-pill:hover { background: rgba(131,215,255,.11); border-color: rgba(131,215,255,.35); color: #e9f8ff; }.ribbon-pill-tokensaver { background: rgba(110,231,192,.10); border-color: rgba(110,231,192,.22); color: #a2f2d7; }.send { background: linear-gradient(145deg, #8ae0ff, #8f92ff); color: #0e1734; border-radius: 11px; box-shadow: 0 5px 16px rgba(100,174,255,.28); }.send:hover:not(:disabled) { background: #b5edff; }
-
-/* Landing screen — a welcoming game start screen, with patch notes at the top. */
-.landing, .privacy-page, .about-page, .settings-page { background: transparent; }.landing { padding: 22px clamp(20px,5vw,80px); }.landing nav, .about-nav { border-bottom: 1px solid var(--lobby-line); padding-bottom: 14px; }.landing-nav-btn { border-radius: 9px !important; color: #b6c5df !important; }.landing-nav-btn:hover { background: rgba(131,215,255,.10) !important; border-color: rgba(131,215,255,.28) !important; color: #eff7ff !important; }
-.landing > .announce-board { align-self: center; margin: 24px 0 2px; max-width: 940px; width: 100%; display: grid; grid-template-columns: 185px 1fr; gap: 14px; padding: 14px 16px; border-radius: 16px; background: linear-gradient(100deg, rgba(52,82,138,.46), rgba(50,38,105,.42)); border: 1px solid rgba(166,214,255,.24); box-shadow: 0 15px 36px rgba(3,7,23,.25), inset 0 1px rgba(255,255,255,.09); backdrop-filter: blur(18px); }
-.landing > .announce-board .announce-board-header { justify-content: flex-start; align-self: stretch; flex-direction: column; align-items: flex-start; gap: 7px; margin: 0; padding: 3px 16px 3px 3px; border: 0; border-right: 1px solid rgba(188,219,255,.18); color: #dff5ff; text-shadow: none; font-size: 12px; letter-spacing: .02em; text-transform: none; }.landing > .announce-board .announce-board-header svg { color: #87dbff; }.announce-board-dots { color: #a992ff; }.landing > .announce-board .announce-board-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }.landing > .announce-board .announce-board-item { min-height: 52px; align-items: center; padding: 8px 10px; background: rgba(5,10,30,.22); border: 1px solid rgba(196,220,255,.10); border-radius: 11px; }.announce-board-check { color: var(--lobby-mint); filter: drop-shadow(0 0 6px rgba(110,231,192,.28)); }.announce-board-text { font-size: 11px; font-weight: 600; line-height: 1.42; letter-spacing: -.01em; color: #d7e5ff; text-shadow: none; text-transform: none; }.announce-board-tag { border-radius: 999px; background: rgba(140,216,255,.18); border: 1px solid rgba(140,216,255,.28); color: #bbecff; box-shadow: none; padding: 1px 6px; font-size: 8px; }
-.hero { max-width: 900px; width: 100%; margin: auto; padding: 3.2vh 0 6vh; text-align: center; }.hero > div:first-child { margin-bottom: 4px !important; height: 190px; }.hero > div:first-child .astral-logo { margin: -6px auto 0; }.eyebrow { color: #a9dfff; justify-content: center; letter-spacing: .09em; font-size: 10px; }.hero h1 { max-width: 760px; margin: 14px auto 16px; font-size: clamp(44px,6.5vw,78px); font-weight: 700; }.hero h1 i { color: #b9b5ff; text-shadow: 0 0 26px rgba(167,139,250,.25); }.hero > p { max-width: 610px; margin: auto; color: #b4c1dc; }.hero-actions { justify-content: center; margin-top: 28px; }.trust { justify-content: center; margin-top: 32px; color: #b5c2d9; }.trust svg { color: #8edfff; } footer { text-align: center; color: #7785a5; } footer a { color: #9acdf2; }
-
-.settings-page::before { background: radial-gradient(ellipse at 50% -20%, rgba(119,190,255,.15), transparent 70%); }.settings-header, .about-nav { background: rgba(9,14,33,.75); border-color: var(--lobby-line); }.settings-nav { background: rgba(15,22,45,.70); border-color: var(--lobby-line); }.settings-tab-btn.selected { background: rgba(131,215,255,.12); border-color: rgba(131,215,255,.28); color: #e8f7ff; }.settings-content > div { background: rgba(17,25,49,.86) !important; border-color: var(--lobby-line) !important; border-radius: 18px !important; }.modal-overlay { background: rgba(5,8,24,.70); }.modal-dialog { background: #161f3e; border-color: rgba(150,213,255,.34); border-radius: 18px; }.about-page { background: transparent; }.glass { background: rgba(20,29,55,.76); border-color: var(--lobby-line); border-radius: 15px; }.about-card:hover { border-color: rgba(131,215,255,.36); background: rgba(93,175,255,.09); }.about-card svg, .about-split-icon, .about-support, .about-tagline { color: #92dfff; }.about-orbit-ring.two { border-color: rgba(131,215,255,.30); }.about-orbit-core { background: radial-gradient(circle at 35% 30%, #ecfbff, #80d4ff 58%, #7775e9 100%); box-shadow: 0 0 42px rgba(116,196,255,.28); }
-
-/* Third install route: intentionally calm so it reads as part of the lobby. */
-.install-webapp-link { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 12px; background: rgba(116,196,255,.07); border: 1px solid rgba(155,210,255,.20); color: #edf6ff; text-decoration: none; cursor: pointer; transition: transform .2s var(--ease-apple), background .2s ease, border-color .2s ease, box-shadow .2s ease; }.install-webapp-link:hover { background: rgba(116,196,255,.13); border-color: rgba(155,220,255,.42); box-shadow: 0 8px 22px rgba(57,128,245,.12); }.install-webapp-link__content { display: flex; align-items: center; gap: 12px; min-width: 0; }.install-webapp-link__icon { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(120,205,255,.13); border: 1px solid rgba(151,222,255,.24); color: #92ddff; }.install-webapp-link__title { font-size: 14px; font-weight: 650; color: #f2f7ff; margin-bottom: 2px; }.install-webapp-link__title span { display: inline-block; margin-left: 5px; padding: 1px 5px; border-radius: 999px; background: rgba(110,231,192,.13); color: #a8f6df; font: 700 9px var(--font-mono); letter-spacing: .04em; vertical-align: 1px; }.install-webapp-link__url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9ccfec; font: 11px var(--font-mono); }.install-webapp-link__external { flex: none; color: #a7ddff; }
-
-@media (max-width: 760px) { .chat, .composer-wrap { margin-left: 0; left: 0; }.landing > .announce-board { grid-template-columns: 1fr; }.landing > .announce-board .announce-board-header { flex-direction: row; align-items: center; border-right: 0; border-bottom: 1px solid rgba(188,219,255,.16); padding: 0 0 9px; }.landing > .announce-board .announce-board-list { grid-template-columns: 1fr; }.hero > div:first-child { height: 184px; margin-bottom: 0 !important; }.hero > div:first-child .astral-logo { transform: scale(.72); transform-origin: top center; } }
+@media (max-width: 760px) {
+  .hero > div:first-child {
+    height: 184px;
+    margin-bottom: 0 !important;
+  }
+  .hero > div:first-child .astral-logo {
+    transform: scale(0.72);
+    transform-origin: top center;
+  }
+}

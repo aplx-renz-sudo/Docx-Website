@@ -34,7 +34,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
                 letterSpacing: '0.04em',
               }}
             >
-              <Download size={13} /> INSTALL APLX
+              <Download size={13} /> INSTALL VILEDOCX
             </span>
           </div>
           <button
@@ -53,7 +53,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
               id="install-modal-title"
               style={{ fontSize: '16px', fontWeight: 600, color: '#f5f5f7', margin: '0 0 6px 0' }}
             >
-              Choose your Aplx installation
+              Choose your VileDocx installation
             </h3>
             <p style={{ fontSize: '13px', color: '#86868b', margin: 0, lineHeight: 1.5 }}>
               Select an option below to open the official repository and download link.
@@ -61,12 +61,12 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* 1. Install Aplx CLI */}
+            {/* 1. Install VileDocx CLI */}
             <a
-              href="https://github.com/R3nz/Aplx"
+              href="https://github.com/Korentic/Docx"
               target="_blank"
               rel="noopener noreferrer"
-              id="install-aplx-cli-btn"
+              id="install-viledocx-cli-btn"
               className="playful-pop"
               style={{
                 display: 'flex',
@@ -101,22 +101,22 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
                 </div>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
-                    1. Install Aplx CLI
+                    1. Install VileDocx CLI
                   </div>
                   <div style={{ fontSize: '12px', color: '#8ea8ff', fontFamily: 'var(--font-mono)' }}>
-                    https://github.com/R3nz/Aplx
+                    https://github.com/Korentic/Docx
                   </div>
                 </div>
               </div>
               <ExternalLink size={16} style={{ color: '#8ea8ff', flexShrink: 0 }} />
             </a>
 
-            {/* 2. Install Aplx Website */}
+            {/* 2. Install VileDocx Website */}
             <a
-              href="https://github.com/aplx-renz-sudo/Aplx-Website"
+              href="https://github.com/aplx-renz-sudo/Docx-Website"
               target="_blank"
               rel="noopener noreferrer"
-              id="install-aplx-website-btn"
+              id="install-viledocx-website-btn"
               className="playful-pop"
               style={{
                 display: 'flex',
@@ -151,22 +151,22 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
                 </div>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
-                    2. Install Aplx Website
+                    2. Install VileDocx Website
                   </div>
                   <div style={{ fontSize: '12px', color: '#c084fc', fontFamily: 'var(--font-mono)' }}>
-                    https://github.com/aplx-renz-sudo/Aplx-Website
+                    https://github.com/aplx-renz-sudo/Docx-Website
                   </div>
                 </div>
               </div>
               <ExternalLink size={16} style={{ color: '#c084fc', flexShrink: 0 }} />
             </a>
 
-            {/* 3. Install the Aplx WebApp */}
+            {/* 3. Install the VileDocx WebApp */}
             <a
-              href="https://github.com/aplx-renz-sudo/aplx-web-app"
+              href="https://github.com/aplx-renz-sudo/Docx-web-app"
               target="_blank"
               rel="noopener noreferrer"
-              id="install-aplx-webapp-btn"
+              id="install-viledocx-webapp-btn"
               className="playful-pop install-webapp-link"
             >
               <div className="install-webapp-link__content">
@@ -175,7 +175,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
                 </div>
                 <div>
                   <div className="install-webapp-link__title">3. Install the WebApp <span>NEW!</span></div>
-                  <div className="install-webapp-link__url">github.com/aplx-renz-sudo/aplx-web-app</div>
+                  <div className="install-webapp-link__url">github.com/aplx-renz-sudo/Docx-web-app</div>
                 </div>
               </div>
               <ExternalLink size={16} className="install-webapp-link__external" />

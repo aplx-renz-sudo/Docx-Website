@@ -1,11 +1,11 @@
 import type { ChatTurn } from '../providers/types';
 import type { TokenSaverMode, TokenStats } from '../types';
 
-const STATS_KEY = 'aplx:token_stats';
+const STATS_KEY = 'viledocx:token_stats';
 
 export function loadTokenStats(): TokenStats {
   try {
-    const raw = localStorage.getItem(STATS_KEY);
+    const raw = localStorage.getItem(STATS_KEY) || localStorage.getItem('aplx:token_stats');
     if (raw) return JSON.parse(raw);
   } catch {}
   return {
@@ -37,10 +37,33 @@ export type ModelCategory = 'reasoning' | 'flagship' | 'fast' | 'local';
 
 export function getModelCategory(modelName: string): ModelCategory {
   const m = modelName.toLowerCase();
-  if (m.includes('o1') || m.includes('o3') || m.includes('r1') || m.includes('3.7-sonnet') || m.includes('codex') || m.includes('5.6')) {
+  if (
+    m.includes('o1') ||
+    m.includes('o3') ||
+    m.includes('r1') ||
+    m.includes('3.7-sonnet') ||
+    m.includes('5-5-sonnet') ||
+    m.includes('sonnet') ||
+    m.includes('sol') ||
+    m.includes('fable') ||
+    m.includes('mythos') ||
+    m.includes('argon') ||
+    m.includes('codex') ||
+    m.includes('5.6')
+  ) {
     return 'reasoning';
   }
-  if (m.includes('pro') || m.includes('opus') || m.includes('gpt-4o') || m.includes('large') || m.includes('k3') || m.includes('m3')) {
+  if (
+    m.includes('pro') ||
+    m.includes('opus') ||
+    m.includes('gpt-4o') ||
+    m.includes('gpt-6') ||
+    m.includes('astra') ||
+    m.includes('gemini-4') ||
+    m.includes('large') ||
+    m.includes('k3') ||
+    m.includes('m3')
+  ) {
     return 'flagship';
   }
   if (m.includes('ollama') || m.includes('local') || m.includes('qwen')) {

@@ -19,7 +19,7 @@ export const ApiLimitModal: React.FC<ApiLimitModalProps> = ({
 }) => {
   const [waterGlasses, setWaterGlasses] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('aplx:hydration_count');
+      const saved = localStorage.getItem('viledocx:hydration_count');
       return saved ? parseInt(saved, 10) : 0;
     } catch {
       return 0;
@@ -28,7 +28,7 @@ export const ApiLimitModal: React.FC<ApiLimitModalProps> = ({
 
   const [grassTouched, setGrassTouched] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('aplx:grass_touched_count');
+      const saved = localStorage.getItem('viledocx:grass_touched_count');
       return saved ? parseInt(saved, 10) : 0;
     } catch {
       return 0;
@@ -53,7 +53,7 @@ export const ApiLimitModal: React.FC<ApiLimitModalProps> = ({
     const next = waterGlasses + 1;
     setWaterGlasses(next);
     try {
-      localStorage.setItem('aplx:hydration_count', String(next));
+      localStorage.setItem('viledocx:hydration_count', String(next));
       sounds.playComplete();
     } catch {
       // ignore
@@ -66,7 +66,7 @@ export const ApiLimitModal: React.FC<ApiLimitModalProps> = ({
     const next = grassTouched + 1;
     setGrassTouched(next);
     try {
-      localStorage.setItem('aplx:grass_touched_count', String(next));
+      localStorage.setItem('viledocx:grass_touched_count', String(next));
       sounds.playComplete();
     } catch {
       // ignore

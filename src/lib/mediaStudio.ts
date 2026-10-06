@@ -30,8 +30,8 @@ export const MAX_IMAGES_BEFORE_COOLDOWN = 5;
 export const MAX_VIDEOS_BEFORE_COOLDOWN = 2;
 export const COOLDOWN_DURATION_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-const STORAGE_RATE_LIMIT_KEY = 'aplx:media_rate_limit:v1';
-const STORAGE_GALLERY_KEY = 'aplx:media_gallery:v1';
+const STORAGE_RATE_LIMIT_KEY = 'viledocx:media_rate_limit:v1';
+const STORAGE_GALLERY_KEY = 'viledocx:media_gallery:v1';
 
 export function getMediaRateLimit(): MediaRateLimit {
   const defaultState: MediaRateLimit = {
@@ -44,7 +44,7 @@ export function getMediaRateLimit(): MediaRateLimit {
   };
 
   try {
-    const raw = localStorage.getItem(STORAGE_RATE_LIMIT_KEY);
+    const raw = localStorage.getItem(STORAGE_RATE_LIMIT_KEY) || localStorage.getItem('aplx:media_rate_limit:v1');
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as Partial<MediaRateLimit>;
     const now = Date.now();
@@ -194,7 +194,7 @@ export function recordVideoGenerated(): MediaRateLimit {
 
 export function getMediaGallery(): MediaItem[] {
   try {
-    const raw = localStorage.getItem(STORAGE_GALLERY_KEY);
+    const raw = localStorage.getItem(STORAGE_GALLERY_KEY) || localStorage.getItem('aplx:media_gallery:v1');
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -309,7 +309,7 @@ export async function generateHighQualityImage(
     resolution: options.resolution,
     url,
     createdAt: Date.now(),
-    providerUsed: apiKey ? 'AI Neural Studio (Hybrid Engine)' : 'Aplx Ultra-HD Generative Canvas',
+    providerUsed: apiKey ? 'AI Neural Studio (Hybrid Engine)' : 'VileDocx Ultra-HD Generative Canvas',
   };
 
   saveMediaToGallery(item);
@@ -413,7 +413,7 @@ export async function generateHighQualityVideo(
     duration: options.duration,
     url: videoBlobUrl,
     createdAt: Date.now(),
-    providerUsed: apiKey ? 'AI Motion Cinema Engine (Veo Assisted)' : 'Aplx HD Motion Synth',
+    providerUsed: apiKey ? 'AI Motion Cinema Engine (Veo Assisted)' : 'VileDocx HD Motion Synth',
   };
 
   saveMediaToGallery(item);
@@ -588,7 +588,7 @@ function generateProceduralArtwork(
   // Elegant stylized typographic watermark / metadata badge in bottom corner
   ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.font = 'bold 24px system-ui, sans-serif';
-  ctx.fillText('APLX ULTRA-HD STUDIO', 40, height - 65);
+  ctx.fillText('VILEDOCX ULTRA-HD STUDIO', 40, height - 65);
   ctx.font = '16px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
   ctx.fillText(`${style} · ${aspectRatio} · ${new Date().toLocaleDateString()}`, 40, height - 38);

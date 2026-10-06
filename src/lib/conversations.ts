@@ -9,16 +9,23 @@ export type Conversation = {
   model?: string;
 };
 
-const CONVERSATIONS_KEY = 'aplx:conversations:v1';
-const ACTIVE_CONV_KEY = 'aplx:active_conv:v1';
+const CONVERSATIONS_KEY = 'viledocx:conversations:v1';
+const ACTIVE_CONV_KEY = 'viledocx:active_conv:v1';
 
 export function loadConversations(): Conversation[] {
   try {
-    const raw = localStorage.getItem(CONVERSATIONS_KEY);
+    const raw = localStorage.getItem(CONVERSATIONS_KEY) || localStorage.getItem('aplx:conversations:v1');
     if (raw !== null) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed;
+        // Sanitize any legacy "Aplx" mentions to "Docx"
+        return parsed.map((conv: Conversation) => ({
+          ...conv,
+          messages: (conv.messages || []).map((m: Message) => ({
+            ...m,
+            content: m.content ? m.content.replace(/\bAplx\b/gi, 'Docx') : m.content,
+          })),
+        }));
       }
     }
   } catch {}
@@ -34,7 +41,7 @@ export function loadConversations(): Conversation[] {
         role: 'model',
         time: 'now',
         content:
-          "Welcome to **Aplx**.\n\nI'm your private AI assistant — connect any supported provider in Settings (Gemini, ChatGPT, Groq, OpenRouter, or Ollama) and customize your space with themes, interactive pets, and smart token optimization.",
+          "Welcome to **Docx**.\n\nI'm your private AI assistant — connect any supported provider in Settings (Gemini, ChatGPT, Groq, OpenRouter, or Ollama) and customize your space with themes, interactive pets, and smart token optimization.",
       },
     ],
   };
@@ -50,7 +57,7 @@ export function saveConversations(conversations: Conversation[]) {
 
 export function getActiveConversationId(): string {
   try {
-    const id = localStorage.getItem(ACTIVE_CONV_KEY);
+    const id = localStorage.getItem(ACTIVE_CONV_KEY) || localStorage.getItem('aplx:active_conv:v1');
     if (id) return id;
   } catch {}
   return 'default';

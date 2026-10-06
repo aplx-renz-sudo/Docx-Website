@@ -89,12 +89,12 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
     {
       id: 'section-how-it-works',
       number: 2,
-      title: '2. How Aplx Works',
-      shortTitle: 'How Aplx Works',
+      title: '2. How VileDocx Works',
+      shortTitle: 'How VileDocx Works',
       badge: 'Technical Flow',
       badgeColor: 'text-indigo-400 bg-indigo-950/40 border-indigo-500/30',
       icon: Cpu,
-      summary: 'Aplx executes 100% in your browser JavaScript sandbox. Requests stream directly between your device and AI providers.',
+      summary: 'VileDocx executes 100% in your browser JavaScript sandbox. Requests stream directly between your device and AI providers.',
       keywords: ['works', 'architecture', 'react', 'vite', 'browser', 'fetch', 'runtime'],
     },
     {
@@ -105,7 +105,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
       badge: 'Local Web Storage',
       badgeColor: 'text-amber-400 bg-amber-950/40 border-amber-500/30',
       icon: KeyRound,
-      summary: 'API keys remain in your browser storage partition, never pass through Aplx servers, and transmit strictly to configured providers.',
+      summary: 'API keys remain in your browser storage partition, never pass through VileDocx servers, and transmit strictly to configured providers.',
       keywords: ['keys', 'credentials', 'storage', 'sessionStorage', 'localStorage', 'pin', 'vault'],
     },
     {
@@ -122,7 +122,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
     {
       id: 'section-data-collected',
       number: 5,
-      title: '5. Data Aplx Does / Does Not Collect',
+      title: '5. Data VileDocx Does / Does Not Collect',
       shortTitle: 'Collected vs Not Collected',
       badge: 'Zero Telemetry',
       badgeColor: 'text-cyan-400 bg-cyan-950/40 border-cyan-500/30',
@@ -171,7 +171,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
       badge: 'Browser Realities',
       badgeColor: 'text-red-400 bg-red-950/40 border-red-500/30',
       icon: Lock,
-      summary: 'Aplx applies native browser defenses and burst limiting, but client storage cannot defend against device malware or malicious extensions.',
+      summary: 'VileDocx applies native browser defenses and burst limiting, but client storage cannot defend against device malware or malicious extensions.',
       keywords: ['security', 'malware', 'extensions', 'anti-ddos', 'subtle crypto', 'sha-256'],
     },
     {
@@ -182,7 +182,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
       badge: 'Legal Disclaimer',
       badgeColor: 'text-amber-400 bg-amber-950/40 border-amber-500/30',
       icon: Scale,
-      summary: 'Aplx is provided "AS IS" without warranties. Developer liability is excluded to the maximum extent permitted by applicable law.',
+      summary: 'VileDocx is provided "AS IS" without warranties. Developer liability is excluded to the maximum extent permitted by applicable law.',
       keywords: ['liability', 'as-is', 'damages', 'limitation', 'disclaimer', 'consumer rights', 'statutory'],
     },
     {
@@ -193,7 +193,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
       badge: 'Independent Entities',
       badgeColor: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30',
       icon: ServerOff,
-      summary: 'Model providers are independent third parties. Aplx has no agency relationship, revenue share, or control over provider services.',
+      summary: 'Model providers are independent third parties. VileDocx has no agency relationship, revenue share, or control over provider services.',
       keywords: ['independent', 'agent', 'broker', 'openai', 'anthropic', 'google', 'contracts'],
     },
     {
@@ -204,7 +204,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
       badge: 'Age Requirements',
       badgeColor: 'text-orange-400 bg-orange-950/40 border-orange-500/30',
       icon: AlertTriangle,
-      summary: 'Aplx is a developer utility, not directed to children. Minors must have verifiable parental or guardian authorization under local law.',
+      summary: 'VileDocx is a developer utility, not directed to children. Minors must have verifiable parental or guardian authorization under local law.',
       keywords: ['children', 'minors', 'coppa', 'dpdpa', 'gdpr art 8', 'parental consent'],
     },
     {
@@ -254,12 +254,12 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
     {
       id: 'section-host-locally',
       number: 17,
-      title: '17. Host Aplx Locally (Maximum Privacy)',
+      title: '17. Host VileDocx Locally (Maximum Privacy)',
       shortTitle: 'Host Locally (Red Box)',
       badge: 'Maximum Privacy',
       badgeColor: 'text-red-400 bg-red-950/40 border-red-500/30',
       icon: ShieldAlert,
-      summary: 'Host Aplx locally on your own device to avoid third-party hosting infrastructure like Vercel and obtain maximum privacy.',
+      summary: 'Host VileDocx locally on your own device to avoid third-party hosting infrastructure like Vercel and obtain maximum privacy.',
       keywords: ['host locally', 'maximum privacy', 'vercel', 'github', 'install', 'self-host', 'red box'],
     },
   ];
@@ -295,7 +295,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               <span className="w-7 h-7 rounded-lg bg-[#2997ff]/20 border border-[#2997ff]/40 text-[#8ea8ff] font-bold flex items-center justify-center text-sm">
                 A
               </span>
-              <span className="font-bold tracking-wider text-sm">APLX</span>
+              <span className="font-bold tracking-wider text-sm">VILEDOCX</span>
             </div>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-[10.5px] font-mono font-semibold text-[#8ea8ff] bg-[#121d38] border border-[#233560] px-2.5 py-0.5 rounded-full">
               <ShieldCheck size={12} className="text-[#8ea8ff]" /> PRIVACY & LEGAL NOTICE SYSTEM
@@ -307,7 +307,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               onClick={about}
               className="playful-pop px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-[#cbd7f0] transition-all cursor-pointer"
             >
-              About Aplx
+              About VileDocx
             </button>
             <button
               type="button"
@@ -343,16 +343,16 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               </span>
             </div>
             <span className="text-[11px] font-mono text-[#7e92b8] bg-white/[0.03] border border-white/[0.07] px-3 py-1 rounded-full">
-              Last Updated: September 2026 • V2
+              Last Updated: October 2026 • V3
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Aplx Privacy, Credential Architecture & Legal Terms
+            VileDocx Privacy, Credential Architecture & Legal Terms
           </h1>
 
           <p className="text-sm text-[#9ab0d6] leading-relaxed max-w-3xl font-normal">
-            This unified legal notice articulates Aplx's client-side privacy model, credential handling, third-party provider data transmission, user responsibilities, and limitation of liability under both Indian law and international regulatory frameworks.
+            This unified legal notice articulates VileDocx's client-side privacy model, credential handling, third-party provider data transmission, user responsibilities, and limitation of liability under both Indian law and international regulatory frameworks.
           </p>
 
           {/* Core Architecture Badges */}
@@ -482,7 +482,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
             <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-[#d8e4fa] space-y-1.5">
               <b className="text-white text-xs block font-semibold">Plain English Summary:</b>
               <p className="text-[12px] leading-relaxed">
-                Aplx is an open-source AI client running directly in your web browser. When you use Aplx, prompts and API keys are sent directly from your device to the AI provider you configure (such as Google, OpenAI, Anthropic, or a local server like Ollama). Aplx operates zero intermediary proxy servers, does not maintain a central database of your conversations, and does not sell or track your personal information.
+                VileDocx is an open-source AI client running directly in your web browser. When you use VileDocx, prompts and API keys are sent directly from your device to the AI provider you configure (such as Google, OpenAI, Anthropic, or a local server like Ollama). VileDocx operates zero intermediary proxy servers, does not maintain a central database of your conversations, and does not sell or track your personal information.
               </p>
             </div>
 
@@ -493,14 +493,14 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   <tr>
                     <th className="p-3 border-b border-white/[0.08]">Data Category</th>
                     <th className="p-3 border-b border-white/[0.08]">Where It Resides</th>
-                    <th className="p-3 border-b border-white/[0.08]">Does Aplx Server See It?</th>
+                    <th className="p-3 border-b border-white/[0.08]">Does VileDocx Server See It?</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.05] text-[#a1b4d8]">
                   <tr>
                     <td className="p-3 font-semibold text-white">Provider API Keys</td>
                     <td className="p-3">Local browser storage (<code className="text-[#ccd8f0]">localStorage</code> or <code className="text-[#ccd8f0]">sessionStorage</code>)</td>
-                    <td className="p-3 text-emerald-300 font-semibold">No. No Aplx server exists.</td>
+                    <td className="p-3 text-emerald-300 font-semibold">No. No VileDocx server exists.</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-semibold text-white">Prompts & Conversations</td>
@@ -509,7 +509,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   </tr>
                   <tr>
                     <td className="p-3 font-semibold text-white">Telemetry & Analytics</td>
-                    <td className="p-3">None collected by Aplx application code</td>
+                    <td className="p-3">None collected by VileDocx application code</td>
                     <td className="p-3 text-emerald-300 font-semibold">No. Zero tracking beacons.</td>
                   </tr>
                   <tr>
@@ -522,13 +522,13 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
             </div>
 
             <p className="text-[11.5px] text-[#8699b8] leading-relaxed">
-              <strong className="text-[#b5c7e8]">Legal Precision:</strong> Aplx operates as an electronic client interface under user direction. Data transmissions initiated through Aplx are point-to-point requests governed by user-selected credentials. The developer maintains no centralized data repository or continuous telemetry pipeline.
+              <strong className="text-[#b5c7e8]">Legal Precision:</strong> VileDocx operates as an electronic client interface under user direction. Data transmissions initiated through VileDocx are point-to-point requests governed by user-selected credentials. The developer maintains no centralized data repository or continuous telemetry pipeline.
             </p>
           </div>
         </section>
 
         {/* ---------------------------------------------------- */}
-        {/* SECTION 2: HOW APLX WORKS */}
+        {/* SECTION 2: HOW VILEDOCX WORKS */}
         {/* ---------------------------------------------------- */}
         <section
           id="section-how-it-works"
@@ -544,7 +544,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   SECTION 2
                 </span>
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  How Aplx Works (Architecture & Data Flow)
+                  How VileDocx Works (Architecture & Data Flow)
                 </h2>
               </div>
             </div>
@@ -555,7 +555,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Aplx is a static single-page application (SPA) built using React 18, TypeScript, and Vite. The user interface executes entirely inside your client browser’s sandboxed JavaScript engine.
+              VileDocx is a static single-page application (SPA) built using React 18, TypeScript, and Vite. The user interface executes entirely inside your client browser’s sandboxed JavaScript engine.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
@@ -582,7 +582,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   3. DIRECT STREAMING
                 </span>
                 <p className="text-[11px] text-[#8699b8] leading-normal">
-                  Response tokens stream directly from the model provider into your browser view. No intermediate Aplx relay, proxy, or server intercepts the transmission.
+                  Response tokens stream directly from the model provider into your browser view. No intermediate VileDocx relay, proxy, or server intercepts the transmission.
                 </p>
               </div>
             </div>
@@ -617,12 +617,12 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3.5 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Aplx requires third-party API keys to connect to commercial model providers. How credentials are treated in Aplx:
+              VileDocx requires third-party API keys to connect to commercial model providers. How credentials are treated in VileDocx:
             </p>
 
             <ul className="space-y-2 list-disc list-inside text-[#9eb0d2]">
               <li>
-                <strong className="text-white">Local Storage:</strong> If you select "Remember Key", your API key is stored in your browser's <code className="text-[#cbd7f0] font-mono">localStorage</code> under the key <code className="text-[#cbd7f0] font-mono">aplx:provider-config</code>. If unchecked, it resides in <code className="text-[#cbd7f0] font-mono">sessionStorage</code> for the duration of the active browser tab only.
+                <strong className="text-white">Local Storage:</strong> If you select "Remember Key", your API key is stored in your browser's <code className="text-[#cbd7f0] font-mono">localStorage</code> under the key <code className="text-[#cbd7f0] font-mono">viledocx:provider-config</code>. If unchecked, it resides in <code className="text-[#cbd7f0] font-mono">sessionStorage</code> for the duration of the active browser tab only.
               </li>
               <li>
                 <strong className="text-white">Storage Security Profile:</strong> Web storage is partitioned per origin by your browser's Same-Origin Policy (SOP). However, values in <code className="text-[#cbd7f0] font-mono">localStorage</code> are stored unencrypted at the browser application layer. They can be read by any script running in that origin, malicious browser extensions with broad permissions, or anyone with direct administrative or physical access to the device.
@@ -631,7 +631,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                 <strong className="text-white">Profile PIN Vault:</strong> The optional profile PIN utilizes a PBKDF2/SHA-256 salted hash with cryptographic WebCrypto primitives to protect UI display access, but this does not constitute full operating system volume encryption.
               </li>
               <li>
-                <strong className="text-white">Zero Developer Exfiltration:</strong> Credentials never transmit to Aplx creators, maintainers, or servers. They leave your device strictly in authenticated HTTP Authorization or provider-specific headers directly to the AI provider you specified.
+                <strong className="text-white">Zero Developer Exfiltration:</strong> Credentials never transmit to VileDocx creators, maintainers, or servers. They leave your device strictly in authenticated HTTP Authorization or provider-specific headers directly to the AI provider you specified.
               </li>
               <li>
                 <strong className="text-white">Revocation & Deletion:</strong> You may delete stored keys at any moment via Settings &rarr; Providers &rarr; Remove Key, or by using "Clear All Data" in Settings.
@@ -708,7 +708,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
         </section>
 
         {/* ---------------------------------------------------- */}
-        {/* SECTION 5: DATA APLX DOES / DOES NOT COLLECT */}
+        {/* SECTION 5: DATA VILEDOCX DOES / DOES NOT COLLECT */}
         {/* ---------------------------------------------------- */}
         <section
           id="section-data-collected"
@@ -724,7 +724,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   SECTION 5
                 </span>
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Data Aplx Does and Does Not Collect
+                  Data VileDocx Does and Does Not Collect
                 </h2>
               </div>
             </div>
@@ -749,7 +749,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
               <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5 font-mono uppercase">
-                <ServerOff size={14} /> NOT Collected by Aplx
+                <ServerOff size={14} /> NOT Collected by VileDocx
               </span>
               <ul className="space-y-1.5 list-disc list-inside text-[#8da2c8] text-[11.5px]">
                 <li>No server-side copies of your prompts or generated AI answers</li>
@@ -790,15 +790,15 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              To deliver static web code and typography, Aplx interfaces with standard third-party web infrastructure:
+              To deliver static web code and typography, VileDocx interfaces with standard third-party web infrastructure:
             </p>
 
             <div className="space-y-2 text-[11.5px] text-[#8fa3c8]">
               <p>
-                <strong className="text-white">Web Hosting & CDN Networks:</strong> When your browser loads Aplx, static HTML, JavaScript, and CSS assets are downloaded from hosting network edge servers (such as Vercel, Cloudflare Pages, or Google Cloud Run). In accordance with standard internet protocol operation, hosting servers process incoming HTTP connection metadata—including IP address, requested URL, browser User-Agent, and timestamps—in standard access and security logs for network routing, cache invalidation, and DDoS mitigation.
+                <strong className="text-white">Web Hosting & CDN Networks:</strong> When your browser loads VileDocx, static HTML, JavaScript, and CSS assets are downloaded from hosting network edge servers (such as Vercel, Cloudflare Pages, or Google Cloud Run). In accordance with standard internet protocol operation, hosting servers process incoming HTTP connection metadata—including IP address, requested URL, browser User-Agent, and timestamps—in standard access and security logs for network routing, cache invalidation, and DDoS mitigation.
               </p>
               <p>
-                <strong className="text-white">Google Fonts Delivery:</strong> Aplx loads display typography from Google Fonts (<code className="text-[#cbd7f0] font-mono">fonts.googleapis.com</code> and <code className="text-[#cbd7f0] font-mono">fonts.gstatic.com</code>). When your browser requests these font files, Google receives your IP address and User-Agent header, governed by Google’s general privacy policy.
+                <strong className="text-white">Google Fonts Delivery:</strong> VileDocx loads display typography from Google Fonts (<code className="text-[#cbd7f0] font-mono">fonts.googleapis.com</code> and <code className="text-[#cbd7f0] font-mono">fonts.gstatic.com</code>). When your browser requests these font files, Google receives your IP address and User-Agent header, governed by Google’s general privacy policy.
               </p>
               <p>
                 <strong className="text-white">Local Inference Engines (Ollama / LM Studio):</strong> When configured for local execution, network requests are dispatched to <code className="text-[#cbd7f0] font-mono">localhost:11434</code> or your designated local network address. No external internet data transmission occurs for local inference.
@@ -835,7 +835,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              As an open-source client utility, Aplx places operational sovereignty in the hands of the end user. By using Aplx, you acknowledge and accept sole responsibility for:
+              As an open-source client utility, VileDocx places operational sovereignty in the hands of the end user. By using VileDocx, you acknowledge and accept sole responsibility for:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -849,7 +849,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-1">
                 <b className="text-white text-xs block">Billing & Consumption Oversight</b>
                 <p className="text-[11px] text-[#8699b8]">
-                  Monitoring your third-party provider accounts, tier quotas, and token spending. Aplx is not responsible for provider invoices or financial charges incurred.
+                  Monitoring your third-party provider accounts, tier quotas, and token spending. VileDocx is not responsible for provider invoices or financial charges incurred.
                 </p>
               </div>
 
@@ -863,7 +863,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-1">
                 <b className="text-white text-xs block">Device & Environment Security</b>
                 <p className="text-[11px] text-[#8699b8]">
-                  Maintaining updated anti-malware protections, operating system patches, and secure browser software on the physical machine running Aplx.
+                  Maintaining updated anti-malware protections, operating system patches, and secure browser software on the physical machine running VileDocx.
                 </p>
               </div>
             </div>
@@ -909,7 +909,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                 <strong className="text-white">Not Professional Advice:</strong> Model outputs do NOT constitute legal, financial, medical, accounting, engineering, or cybersecurity counsel. Never make high-consequence decisions based solely on automated LLM text.
               </li>
               <li>
-                <strong className="text-white">No Verification by Aplx:</strong> Aplx acts purely as a client-side conduit. The developer does not author, screen, review, endorse, or verify the correctness or safety of any AI-generated response.
+                <strong className="text-white">No Verification by VileDocx:</strong> VileDocx acts purely as a client-side conduit. The developer does not author, screen, review, endorse, or verify the correctness or safety of any AI-generated response.
               </li>
               <li>
                 <strong className="text-white">Mandatory Human Review:</strong> Users must independently test, review, and validate all generated text, code snippets, or configurations before deploying them in production or acting in reliance upon them.
@@ -946,7 +946,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Aplx incorporates disciplined client-side hygiene: sliding-window in-memory burst limiting (anti-DDoS / loop prevention), WebCrypto SHA-256 integrity verification, and zero remote telemetry.
+              VileDocx incorporates disciplined client-side hygiene: sliding-window in-memory burst limiting (anti-DDoS / loop prevention), WebCrypto SHA-256 integrity verification, and zero remote telemetry.
             </p>
 
             <div className="p-4 rounded-xl bg-black/40 border border-white/[0.08] space-y-2 text-[11.5px] text-[#9eb0d2]">
@@ -955,7 +955,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                 No client-side software running inside a web browser can guarantee 100% impenetrability. Local web storage (<code className="text-[#cbd7f0] font-mono">localStorage</code>) cannot withstand rogue or compromised browser extensions that possess broad host permissions, local operating system malware, physical credential dumping, or insecure multi-user shared browser profiles.
               </p>
               <p>
-                The developer disclaims any warranty that Aplx is completely invulnerable to all potential cyber threats. Users handling sensitive commercial data should evaluate their threat model, utilize private browsing sessions, and consider dedicated local inference environments.
+                The developer disclaims any warranty that VileDocx is completely invulnerable to all potential cyber threats. Users handling sensitive commercial data should evaluate their threat model, utilize private browsing sessions, and consider dedicated local inference environments.
               </p>
             </div>
           </div>
@@ -995,7 +995,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                 <span>1. "AS-IS" AND "AS-AVAILABLE" PROVISION</span>
               </div>
               <p className="text-[11.5px] text-[#a4b6d8] leading-relaxed">
-                To the maximum extent permitted by applicable law, <strong>Aplx</strong> is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis, without warranties of any kind, whether express, implied, statutory, or otherwise. The developer(s), authors, creators, and contributors (<span className="text-[#c0d2f6]">"the Developer"</span>) expressly disclaim all warranties, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, title, non-infringement, quiet enjoyment, and accuracy of informational content. The Developer does not warrant that the application will operate error-free, uninterrupted, or compatible with any specific hardware, browser, or third-party service.
+                To the maximum extent permitted by applicable law, <strong>VileDocx</strong> is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis, without warranties of any kind, whether express, implied, statutory, or otherwise. The developer(s), authors, creators, and contributors (<span className="text-[#c0d2f6]">"the Developer"</span>) expressly disclaim all warranties, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, title, non-infringement, quiet enjoyment, and accuracy of informational content. The Developer does not warrant that the application will operate error-free, uninterrupted, or compatible with any specific hardware, browser, or third-party service.
               </p>
             </div>
 
@@ -1009,7 +1009,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                 To the maximum extent permitted by applicable law, in no event shall the Developer be liable to you or any third party for any direct, indirect, incidental, consequential, special, punitive, or exemplary damages, or for any loss of profits, revenue, data, goodwill, business interruption, equipment failure, API billing charges, quota exhaustion, or intangible losses arising out of or relating to:
               </p>
               <ul className="space-y-1 list-disc list-inside text-[11px] text-[#8fa1c4] pl-2">
-                <li>Your access to, use of, or inability to access or use Aplx;</li>
+                <li>Your access to, use of, or inability to access or use VileDocx;</li>
                 <li>Your independent selection, configuration, or use of third-party AI providers, models, or API keys;</li>
                 <li>Prompts, text, code, or materials submitted by you, or outputs generated by connected AI models;</li>
                 <li>Actions taken, decisions made, or code executed in reliance upon AI-generated outputs;</li>
@@ -1058,12 +1058,12 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Third-party AI providers (e.g., Google, OpenAI, Anthropic, Groq, Mistral, OpenRouter) are distinct, independent entities unaffiliated with Aplx unless explicitly indicated.
+              Third-party AI providers (e.g., Google, OpenAI, Anthropic, Groq, Mistral, OpenRouter) are distinct, independent entities unaffiliated with VileDocx unless explicitly indicated.
             </p>
 
             <ul className="space-y-2 list-disc list-inside text-[#9eb0d2] text-[11.5px]">
               <li>
-                <strong className="text-white">No Agency or Partnership:</strong> Aplx does not act as an agent, reseller, distributor, partner, or joint venturer of any AI provider.
+                <strong className="text-white">No Agency or Partnership:</strong> VileDocx does not act as an agent, reseller, distributor, partner, or joint venturer of any AI provider.
               </li>
               <li>
                 <strong className="text-white">Direct Contractual Relationship:</strong> When you generate or input an API key from an AI provider, the legal and commercial contract for service delivery, billing, and data usage exists exclusively between you and that provider.
@@ -1103,7 +1103,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3.5 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Aplx is a general-purpose developer and productivity utility. It is not directed to children, does not market to minors, and does not knowingly collect or solicit personal data from children.
+              VileDocx is a general-purpose developer and productivity utility. It is not directed to children, does not market to minors, and does not knowingly collect or solicit personal data from children.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
@@ -1121,7 +1121,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   UNITED STATES (COPPA)
                 </span>
                 <p className="text-[11px] text-[#8699b8] leading-normal">
-                  In compliance with the Children’s Online Privacy Protection Act (COPPA), Aplx does not collect personal information from children under 13 years of age. Aplx operates no remote database of personal identifiers.
+                  In compliance with the Children’s Online Privacy Protection Act (COPPA), VileDocx does not collect personal information from children under 13 years of age. VileDocx operates no remote database of personal identifiers.
                 </p>
               </div>
 
@@ -1169,7 +1169,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-4 text-xs text-[#9eb0d2] leading-relaxed">
             <p className="text-[12px] text-[#cbd7f0]">
-              Aplx is globally accessible via the open internet. Because consumer, privacy, and contract laws vary across nations, this notice explicitly aligns with both Indian statutory frameworks and major international privacy architectures:
+              VileDocx is globally accessible via the open internet. Because consumer, privacy, and contract laws vary across nations, this notice explicitly aligns with both Indian statutory frameworks and major international privacy architectures:
             </p>
 
             {/* INDIA SPECIFIC DISCLOSURE */}
@@ -1180,10 +1180,10 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
               <div className="space-y-2 text-[11.5px] text-[#a6b9df]">
                 <p>
-                  <strong>1. Information Technology Act, 2000 & SPDI Rules, 2011:</strong> Sections 43A and 72A of the IT Act penalize unauthorized access and breach of confidentiality. In compliance with the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, this document serves as Aplx’s published privacy policy. Aplx does not retain, disclose, or collect sensitive personal data on central servers.
+                  <strong>1. Information Technology Act, 2000 & SPDI Rules, 2011:</strong> Sections 43A and 72A of the IT Act penalize unauthorized access and breach of confidentiality. In compliance with the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, this document serves as VileDocx’s published privacy policy. VileDocx does not retain, disclose, or collect sensitive personal data on central servers.
                 </p>
                 <p>
-                  <strong>2. Digital Personal Data Protection Act, 2023 (DPDPA):</strong> Acknowledging the phased implementation of DPDP rules, Aplx does not function as a remote Data Fiduciary processing personal data on centralized cloud infrastructure. Processing executed on the user’s local terminal remains under the direct sovereignty of the user ("Data Principal"). Transmissions to AI providers are governed by the independent status of those providers under the Act.
+                  <strong>2. Digital Personal Data Protection Act, 2023 (DPDPA):</strong> Acknowledging the phased implementation of DPDP rules, VileDocx does not function as a remote Data Fiduciary processing personal data on centralized cloud infrastructure. Processing executed on the user’s local terminal remains under the direct sovereignty of the user ("Data Principal"). Transmissions to AI providers are governed by the independent status of those providers under the Act.
                 </p>
                 <p>
                   <strong>3. Consumer Protection Act, 2019 & E-Commerce Rules, 2020:</strong> Section 2(46) of the Consumer Protection Act, 2019 addresses unfair contract terms. This notice is formulated to provide transparent disclosures and does not attempt to unilaterally exclude mandatory liabilities that cannot be lawfully waived under Indian consumer law.
@@ -1210,7 +1210,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   C. United States & California (CCPA / CPRA)
                 </span>
                 <p className="text-[11px] text-[#8699b8] leading-relaxed">
-                  Aplx does NOT "sell" or "share" personal information or sensitive personal information to third parties for monetary or valuable consideration, or for cross-context behavioral advertising.
+                  VileDocx does NOT "sell" or "share" personal information or sensitive personal information to third parties for monetary or valuable consideration, or for cross-context behavioral advertising.
                 </p>
               </div>
             </div>
@@ -1250,7 +1250,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs text-[#9ab0d6] leading-relaxed">
             <p className="text-[11.5px] text-[#8fa3c8]">
-              As open-source software, supported provider endpoints, and applicable statutory standards evolve, this Privacy & Legal Notice may be revised. Any update will be evidenced by the "Last Updated" date displayed at the top of this document. Continued use of Aplx following revisions indicates your review of the updated terms, subject always to non-waivable statutory protections.
+              As open-source software, supported provider endpoints, and applicable statutory standards evolve, this Privacy & Legal Notice may be revised. Any update will be evidenced by the "Last Updated" date displayed at the top of this document. Continued use of VileDocx following revisions indicates your review of the updated terms, subject always to non-waivable statutory protections.
             </p>
           </div>
         </section>
@@ -1288,19 +1288,19 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
               </p>
               <div className="flex items-center gap-3 pt-1">
                 <a
-                  href="https://github.com/ayushk190524/Aplx"
+                  href="https://github.com/aplx-renz-sudo/Docx-web-app"
                   target="_blank"
                   rel="noreferrer noopener"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-white transition-colors"
                 >
                   <ExternalLink size={13} />
-                  <span>GitHub Repository (Aplx)</span>
+                  <span>GitHub Repository (Docx WebApp)</span>
                 </a>
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-teal-950/20 border border-teal-500/25 text-[11px] text-teal-200/90 leading-relaxed">
-              <strong>Notice on Data Erasure Requests:</strong> Because Aplx operates zero central user accounts and retains no remote database of your chats or credentials, data erasure cannot be executed on a remote server by the developer. To completely erase your data, click "Clear All Data" in Settings or wipe site data in your browser's privacy settings.
+              <strong>Notice on Data Erasure Requests:</strong> Because VileDocx operates zero central user accounts and retains no remote database of your chats or credentials, data erasure cannot be executed on a remote server by the developer. To completely erase your data, click "Clear All Data" in Settings or wipe site data in your browser's privacy settings.
             </div>
           </div>
         </section>
@@ -1333,7 +1333,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="p-4 rounded-xl bg-black/50 border border-white/[0.08] text-xs leading-relaxed space-y-3">
             <p className="text-[12px] text-amber-200 font-semibold leading-relaxed">
-              "This notice is intended to describe Aplx's practices and allocate responsibilities to the maximum extent permitted by applicable law. Laws differ by jurisdiction, and mandatory legal rights and obligations prevail over conflicting provisions. This notice is not a substitute for jurisdiction-specific legal advice."
+              "This notice is intended to describe VileDocx's practices and allocate responsibilities to the maximum extent permitted by applicable law. Laws differ by jurisdiction, and mandatory legal rights and obligations prevail over conflicting provisions. This notice is not a substitute for jurisdiction-specific legal advice."
             </p>
 
             <p className="text-[11.5px] text-[#8fa3c8] leading-relaxed">
@@ -1357,7 +1357,7 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
                   RECOMMENDED ARCHITECTURE
                 </span>
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-wide uppercase mt-0.5">
-                  WANT MAXIMUM PRIVACY? HOST APLX LOCALLY.
+                  WANT MAXIMUM PRIVACY? HOST VILEDOCX LOCALLY.
                 </h2>
               </div>
             </div>
@@ -1368,24 +1368,24 @@ export function PrivacyNoticeView({ back, settings, about }: PrivacyNoticeViewPr
 
           <div className="space-y-3 text-xs sm:text-[13px] text-[#ffccd3] leading-relaxed font-normal">
             <p>
-              This version of Aplx is hosted using a third-party hosting provider (Vercel). While Aplx does not use a server-side proxy for your AI provider requests, the hosted website itself is delivered through third-party infrastructure.
+              This version of VileDocx is hosted using a third-party hosting provider (Vercel). While VileDocx does not use a server-side proxy for your AI provider requests, the hosted website itself is delivered through third-party infrastructure.
             </p>
             <p className="text-[#fca5a5]">
               To be clear: this does not mean Vercel is inherently untrustworthy—Vercel is an established, industry-standard hosting provider. Rather, whenever any application is hosted online, users naturally and understandably have heightened privacy concerns regarding third-party cloud infrastructure, edge networks, and online data handling.
             </p>
             <p className="text-white font-medium">
-              If you are still concerned about online hosting, want zero reliance on external web infrastructure, or require absolute sovereignty over your environment, we highly recommend installing and hosting Aplx locally on your own device.
+              If you are still concerned about online hosting, want zero reliance on external web infrastructure, or require absolute sovereignty over your environment, we highly recommend installing and hosting VileDocx locally on your own device.
             </p>
           </div>
 
           <div className="pt-2">
             <a
-              href="https://github.com/aplx-renz-sudo/Aplx-Website"
+              href="https://github.com/aplx-renz-sudo/Docx-Website"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold text-xs sm:text-sm tracking-wide uppercase transition-all shadow-lg shadow-red-600/30 cursor-pointer active:scale-95"
             >
-              <span>INSTALL APLX WEBSITE →</span>
+              <span>INSTALL VILEDOCX WEBSITE →</span>
             </a>
           </div>
         </section>

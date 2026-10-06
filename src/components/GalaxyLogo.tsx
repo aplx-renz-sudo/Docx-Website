@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import astralLogo from '../assets/aplx-astral-logo.png';
+import astralLogo from '../assets/viledocx-astral-logo.png';
 
 interface GalaxyLogoProps {
   size?: number;
@@ -9,7 +9,7 @@ interface GalaxyLogoProps {
 }
 
 /** Lightweight, local-only astral mark with CSS-driven interaction. */
-export function GalaxyLogo({ size = 300, interactive = true, label = 'Aplx astral logo' }: GalaxyLogoProps) {
+export function GalaxyLogo({ size = 300, interactive = true, label = 'VileDocx astral logo' }: GalaxyLogoProps) {
   const logoRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 

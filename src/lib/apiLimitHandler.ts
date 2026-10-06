@@ -8,7 +8,7 @@ export interface ApiLimitEventDetail {
   details?: string;
 }
 
-const API_LIMIT_EVENT = 'aplx:api_limit_reached';
+const API_LIMIT_EVENT = 'viledocx:api_limit_reached';
 
 /**
  * Checks whether an error or string indicates that an API key limit or server rate limit was reached.

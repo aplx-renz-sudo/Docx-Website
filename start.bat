@@ -1,12 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Aplx Web Launcher
+title VileDocx Web Launcher
 
 cd /d "%~dp0"
 
 echo.
 echo  ============================================
-echo    Aplx Web - starting up...
+echo    VileDocx Web - starting up...
 echo  ============================================
 echo.
 
@@ -50,7 +50,7 @@ for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":3000 .*LISTENING"') d
 
 REM ---- Start server and open browser ----
 echo  [OK] Starting server...
-start "" /min cmd /c "npm run dev > aplx-server.log 2>&1"
+start "" /min cmd /c "npm run dev > viledocx-server.log 2>&1"
 
 REM Wait for the server to answer, then open the browser
 where curl >nul 2>nul
@@ -66,11 +66,11 @@ set /a tries=0
 timeout /t 1 /nobreak >nul
 set /a tries+=1
 set "HTTP_CODE=000"
-curl -s -o nul -w "%%{http_code}" --max-time 2 http://localhost:3000 > "%TEMP%\aplx_http.txt" 2>nul
-set /p HTTP_CODE=<"%TEMP%\aplx_http.txt"
+curl -s -o nul -w "%%{http_code}" --max-time 2 http://localhost:3000 > "%TEMP%\viledocx_http.txt" 2>nul
+set /p HTTP_CODE=<"%TEMP%\viledocx_http.txt"
 if not "%HTTP_CODE%"=="200" (
     if %tries% lss 30 goto waitloop
-    echo  [X] Server did not start in time. Check aplx-server.log for details.
+    echo  [X] Server did not start in time. Check viledocx-server.log for details.
     pause
     exit /b 1
 )
@@ -83,7 +83,7 @@ start "" "http://localhost:3000"
 
 echo.
 echo  ============================================
-echo    Aplx Web is running.
+echo    VileDocx Web is running.
 echo    Keep this window open ^(or minimize it^).
 echo    Press any key to STOP the server.
 echo  ============================================

@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { AIProvider, ChatTurn } from './types';
 
-/** Browser-only provider. The user key is passed directly to Google; no Aplx server exists in this request path. */
+/** Browser-only provider. The user key is passed directly to Google; no VileDocx server exists in this request path. */
 export class GeminiProvider implements AIProvider {
   constructor(private key: string, private model = 'gemini-3.5-flash') {}
   async testConnection() {

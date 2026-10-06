@@ -1,9 +1,9 @@
 import type { ProviderId } from '../providers/registry';
 import { getProvider } from '../providers/registry';
 
-const LEGACY_KEY = 'aplx:gemini-key';
-const REMEMBER_KEY = 'aplx:remember-key';
-const CONFIG_KEY = 'aplx:provider-config';
+const LEGACY_KEY = 'viledocx:gemini-key';
+const REMEMBER_KEY = 'viledocx:remember-key';
+const CONFIG_KEY = 'viledocx:provider-config';
 
 export type ProviderConfig = {
   provider: ProviderId;
@@ -28,7 +28,11 @@ const defaultConfig = (): ProviderConfig => ({
 });
 
 function readStorage(): ProviderConfig | null {
-  const raw = sessionStorage.getItem(CONFIG_KEY) || localStorage.getItem(CONFIG_KEY);
+  const raw =
+    sessionStorage.getItem(CONFIG_KEY) ||
+    localStorage.getItem(CONFIG_KEY) ||
+    sessionStorage.getItem('aplx:provider-config') ||
+    localStorage.getItem('aplx:provider-config');
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as Partial<ProviderConfig>;

@@ -519,7 +519,7 @@ export function ProviderSettings({ config, onChange, onSave }: ProviderSettingsP
               </div>
 
               <p className="text-[11px] text-[#636366] leading-relaxed">
-                Keys are never sent to intermediate proxy servers. Aplx communicates directly from your client.
+                Keys are never sent to intermediate proxy servers. VileDocx communicates directly from your client.
               </p>
             </div>
           ) : (
@@ -624,7 +624,7 @@ function ConnectionDetails({ provider, route }: { provider: ProviderId; route: s
       </div>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
         <dt className="text-[#636366]">Client Interface</dt>
-        <dd className="text-[#f5f5f7] font-mono">Aplx Web Workstation</dd>
+        <dd className="text-[#f5f5f7] font-mono">VileDocx Web Workstation</dd>
         <dt className="text-[#636366]">Active Engine</dt>
         <dd className="text-[#f5f5f7] font-mono">{name}</dd>
         <dt className="text-[#636366]">Direct Endpoint</dt>

@@ -75,7 +75,7 @@ export function ApiKeyRequiredModal({
           </div>
 
           <div style={{ padding: '10px 12px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)', fontSize: '11.5px', color: '#636366', lineHeight: 1.5 }}>
-            Aplx connects directly from your browser to the AI provider without intermediate proxy servers.
+            VileDocx connects directly from your browser to the AI provider without intermediate proxy servers.
           </div>
 
           {/* Action Choices */}

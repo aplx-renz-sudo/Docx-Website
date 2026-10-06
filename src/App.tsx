@@ -55,6 +55,8 @@ import {
   Terminal,
   Film,
   Image as ImageIcon,
+  Users,
+  Info,
 } from 'lucide-react';
 import { createProvider, isProviderReady } from './providers';
 import type { ChatTurn } from './providers/types';
@@ -66,10 +68,12 @@ import { PetCompanion, type PetMood } from './components/PetCompanion';
 import { PetArtwork } from './components/PetArtwork';
 import { ThinkingIndicator } from './components/ThinkingIndicator';
 import { TokenSaverBadge } from './components/TokenSaverBadge';
+import { SwarmMetricsHeaderWidget } from './components/SwarmMetricsHeaderWidget';
 import { CodeBlock } from './components/CodeBlock';
 import { GalaxyLogo, GalaxyLogoMini } from './components/GalaxyLogo';
 import { BuildModeView } from './components/BuildModeView';
 import { MediaStudioView } from './components/MediaStudioView';
+import { MultipleWorkersSettingsTab } from './components/MultipleWorkersSettingsTab';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { OfflineAccountModal } from './components/OfflineAccountModal';
@@ -103,34 +107,34 @@ import { loadUserProfile, saveUserProfile, isUserSetupComplete, removeUserProfil
 import { checkAntiDDoS, sanitizeInputPayload } from './lib/securityGuard';
 import type { View, Message, Preferences, TokenStats, UserProfile } from './types';
 
-const preferenceKey = 'aplx:preferences:v2';
+const preferenceKey = 'viledocx:preferences:v3';
 
 const defaultPreferences: Preferences = {
   theme: 'black',
   themeGradientTarget: 'both',
   customTheme: {
     enabled: false,
-    gradientStart: '#1e053a',
-    gradientEnd: '#003b46',
+    gradientStart: '#000000',
+    gradientEnd: '#141414',
     gradientAngle: 135,
-    accentColor: '#8ea8ff',
-    glowIntensity: 50,
-    backgroundTint: '#040711',
+    accentColor: '#ffffff',
+    glowIntensity: 0,
+    backgroundTint: '#000000',
     gradientTarget: 'both',
   },
-  font: 'dm-sans',
-  bubbleStyle: 'glass',
+  font: 'system',
+  bubbleStyle: 'minimal',
   compact: false,
   sendOnEnter: true,
   motion: true,
-  soundEffects: true,
+  soundEffects: false,
 
-  petId: 'fox',
+  petId: 'none',
   petSize: 'medium',
   petPosition: 'bottom-right',
-  petInteractive: true,
+  petInteractive: false,
 
-  thinkingStyle: 'orbital',
+  thinkingStyle: 'minimal',
   showThinkingTimer: true,
   thinkingDelayMs: 0,
 
@@ -138,10 +142,24 @@ const defaultPreferences: Preferences = {
   tokenSaverTargetPercent: 22,
 
   persona: 'helpful',
-  customSystemPrompt: 'You are Aplx, a brilliant, private, and precise AI assistant.',
+  customSystemPrompt: 'You are VileDocx, an advanced, private, and precise AI assistant.',
   temperature: 0.7,
   maxHistoryTurns: 12,
   streamSpeed: 'normal',
+
+  multipleWorkers: {
+    enabled: true,
+    deliberationDepth: 'deep',
+    showDeliberationStream: true,
+    autoWatchmanFallback: true,
+    activeWorkerCount: 6,
+    apiMode: 'single',
+    useModelVariants: true,
+    costSavingTier: 'ultra',
+    longevityMode: 'endurance_1hr',
+    botApiConfigs: {},
+    keyPool: [],
+  },
 };
 
 const now = () => new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' }).format(new Date());
@@ -180,7 +198,7 @@ export default function App() {
   const [showTour, setShowTour] = useState(false);
   const [guideDismissed, setGuideDismissed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('aplx:guide_dismissed') === 'true';
+      return localStorage.getItem('viledocx:guide_dismissed') === 'true' || localStorage.getItem('aplx:guide_dismissed') === 'true';
     } catch {
       return false;
     }
@@ -193,9 +211,14 @@ export default function App() {
   const [editingConvId, setEditingConvId] = useState<string | null>(null);
   const [editConvTitle, setEditConvTitle] = useState('');
 
-  const [sidebar, setSidebar] = useState(false);
+  const [sidebar, setSidebar] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 760;
+    }
+    return true;
+  });
   const [settingsTab, setSettingsTab] = useState<
-    'provider' | 'tokensaver' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'privacy' | 'about'
+    'provider' | 'tokensaver' | 'workers' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'privacy' | 'about'
   >('provider');
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -259,7 +282,7 @@ export default function App() {
 
   const [preferences, setPreferences] = useState<Preferences>(() => {
     try {
-      const saved = localStorage.getItem(preferenceKey);
+      const saved = localStorage.getItem(preferenceKey) || localStorage.getItem('aplx:preferences:v3') || localStorage.getItem('aplx:preferences:v2');
       if (saved) return { ...defaultPreferences, ...JSON.parse(saved) };
     } catch {}
     return defaultPreferences;
@@ -372,7 +395,7 @@ export default function App() {
           id: 'welcome',
           role: 'model',
           time: now(),
-          content: `Welcome to **Aplx**.\n\nWhat would you like to explore or build today?`,
+          content: `Welcome to **VileDocx**.\n\nWhat would you like to explore or build today?`,
         },
       ],
     };
@@ -439,7 +462,7 @@ export default function App() {
     setView('chat');
     setGuideDismissed(true);
     try {
-      localStorage.setItem('aplx:guide_dismissed', 'true');
+      localStorage.setItem('viledocx:guide_dismissed', 'true');
     } catch {}
     if (startTour) {
       setShowTour(true);
@@ -679,13 +702,13 @@ export default function App() {
     } else if (format === 'markdown') {
       content = `# ${currentConversation.title}\n\n` +
         messages
-          .map(m => `### ${m.role === 'user' ? 'User' : 'Aplx'} (${m.time})\n\n${m.content}\n\n---`)
+          .map(m => `### ${m.role === 'user' ? 'User' : 'VileDocx'} (${m.time})\n\n${m.content}\n\n---`)
           .join('\n\n');
       mimeType = 'text/markdown';
       ext = 'md';
     } else {
       content = messages
-        .map(m => `[${m.time}] ${m.role === 'user' ? 'User' : 'Aplx'}:\n${m.content}`)
+        .map(m => `[${m.time}] ${m.role === 'user' ? 'User' : 'VileDocx'}:\n${m.content}`)
         .join('\n\n---\n\n');
     }
 
@@ -693,7 +716,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `aplx-${currentConversation.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${ext}`;
+    a.download = `viledocx-${currentConversation.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -708,7 +731,7 @@ export default function App() {
         setActiveConversationId(parsed[0].id);
         alert('Conversations imported successfully!');
       } else {
-        alert('Invalid Aplx chat export format.');
+        alert('Invalid VileDocx chat export format.');
       }
     } catch {
       alert('Could not parse JSON file.');
@@ -719,7 +742,7 @@ export default function App() {
     if (confirm('Are you sure you want to erase all chats, keys, and reset settings?')) {
       clearLocalData();
       localStorage.removeItem(preferenceKey);
-      localStorage.removeItem('aplx:user_profile');
+      localStorage.removeItem('viledocx:user_profile'); localStorage.removeItem('aplx:user_profile');
       window.location.reload();
     }
   };
@@ -736,42 +759,42 @@ export default function App() {
 
   const customThemeStyles = useMemo(() => {
     const PRESET_MAP: Record<string, { start: string; mid: string; accent: string }> = {
-      black: { start: '#030303', mid: '#0a0a0e', accent: '#9eb8ff' },
-      midnight: { start: '#030714', mid: '#0c1836', accent: '#7ba4ff' },
-      cyberpunk: { start: '#0a0314', mid: '#250838', accent: '#ff007f' },
-      emerald: { start: '#020c06', mid: '#052a17', accent: '#00f59b' },
-      nebula: { start: '#0a0418', mid: '#251040', accent: '#b388ff' },
-      solar: { start: '#120700', mid: '#2f1503', accent: '#ff9f43' },
-      crimson: { start: '#120307', mid: '#320914', accent: '#ff4757' },
-      polar: { start: '#06090e', mid: '#121c2c', accent: '#70a1ff' },
+      black: { start: '#000000', mid: '#141414', accent: '#ffffff' },
+      midnight: { start: '#0a0a0a', mid: '#181818', accent: '#f5f5f5' },
+      cyberpunk: { start: '#050505', mid: '#121212', accent: '#ffffff' },
+      emerald: { start: '#09090b', mid: '#18181b', accent: '#e4e4e7' },
+      nebula: { start: '#000000', mid: '#111111', accent: '#ffffff' },
+      solar: { start: '#0a0a0a', mid: '#161616', accent: '#f4f4f5' },
+      crimson: { start: '#000000', mid: '#0f0f0f', accent: '#ffffff' },
+      polar: { start: '#090909', mid: '#171717', accent: '#ffffff' },
     };
 
-    let gradientStart = '#030714';
-    let gradientEnd = '#0c1836';
-    let accentColor = '#7ba4ff';
+    let gradientStart = '#000000';
+    let gradientEnd = '#141414';
+    let accentColor = '#ffffff';
     let target = preferences.themeGradientTarget || 'both';
 
     if (preferences.customTheme?.enabled) {
       const ct = preferences.customTheme;
-      gradientStart = ct.gradientStart || '#1e053a';
-      gradientEnd = ct.gradientEnd || '#003b46';
-      accentColor = ct.accentColor || '#8ea8ff';
+      gradientStart = ct.gradientStart || '#000000';
+      gradientEnd = ct.gradientEnd || '#141414';
+      accentColor = ct.accentColor || '#ffffff';
       target = ct.gradientTarget || target || 'both';
     } else {
-      const p = PRESET_MAP[preferences.theme] || PRESET_MAP.midnight;
+      const p = PRESET_MAP[preferences.theme] || PRESET_MAP.black;
       gradientStart = p.start;
       gradientEnd = p.mid;
       accentColor = p.accent;
     }
 
-    const gradientBgCss = `radial-gradient(ellipse at 50% 15%, ${gradientEnd} 0%, ${gradientStart} 70%, #03050a 100%)`;
-    const landingGradientCss = `radial-gradient(circle at 45% 30%, ${gradientEnd}99 0%, ${gradientStart}66 50%, transparent 85%)`;
+    const gradientBgCss = `radial-gradient(ellipse at 50% 15%, ${gradientEnd} 0%, ${gradientStart} 70%, #000000 100%)`;
+    const landingGradientCss = `radial-gradient(circle at 45% 30%, ${gradientEnd} 0%, ${gradientStart} 50%, transparent 85%)`;
 
     const styles: Record<string, string> = {
       '--app-custom-gradient-start': gradientStart,
       '--app-custom-gradient-end': gradientEnd,
       '--app-custom-accent': accentColor,
-      '--theme-glow': `${accentColor}44`,
+      '--theme-glow': `rgba(255, 255, 255, 0.15)`,
     };
 
     if (target === 'background' || target === 'both') {
@@ -895,18 +918,21 @@ export default function App() {
       )}
 
       {view === 'chat' && (
-        <div key="view-chat" className="workspace-container animate-workspace-slide-in">
-          <aside className={'sidebar ' + (sidebar ? 'open' : '')}>
+        <div key="view-chat" className={`workspace-container animate-workspace-slide-in ${sidebar ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+          <aside className={`sidebar ${sidebar ? 'open' : 'closed'}`}>
             <div className="brand flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setView('landing')}
-                className="flex items-center cursor-pointer hover:opacity-85 transition-opacity group text-left bg-transparent border-0 p-0 text-inherit"
-                title="Go to Landing Page"
+                className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity group text-left bg-transparent border-0 p-0 text-inherit"
+                title="Docx - Go to Landing Page"
                 aria-label="Go to Landing Page"
               >
-                <span className="brand-mark group-hover:scale-105 transition-transform">A</span>
-                <span className="group-hover:text-white transition-colors">APLX</span>
+                <span className="brand-mark group-hover:scale-105 transition-transform">D</span>
+                <div className="flex flex-col">
+                  <span className="group-hover:text-white transition-colors font-bold tracking-tight text-sm leading-tight">DOCX</span>
+                  <span className="text-[9px] font-mono text-zinc-400 leading-none">Universal AI Dock</span>
+                </div>
               </button>
               
               <div className="flex items-center gap-1.5">
@@ -914,12 +940,12 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAccountModal(true)}
-                  className="profile-avatar-btn playful-pop group border border-[#26375a] hover:border-[#8ea8ff] bg-[#0c1322] transition-all cursor-pointer"
+                  className="profile-avatar-btn playful-pop group border border-white/10 hover:border-white/30 bg-[#1e1e1e] transition-all cursor-pointer"
                   title={userProfile ? `${userProfile.name} (Click to manage profile)` : 'Click to create Offline Profile'}
                   aria-label="Account profile"
                 >
-                  <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[1.5px] shadow-sm shadow-indigo-950/50 aspect-square flex-none overflow-hidden">
-                    <div className="w-full h-full rounded-full bg-[#080d1a] flex items-center justify-center overflow-hidden text-xs aspect-square">
+                  <div className="w-[26px] h-[26px] rounded-full bg-white/20 p-[1.5px] shadow-sm aspect-square flex-none overflow-hidden">
+                    <div className="w-full h-full rounded-full bg-[#121212] flex items-center justify-center overflow-hidden text-xs aspect-square">
                       {userProfile?.avatarType === 'custom' && userProfile.avatar ? (
                         <img
                           src={userProfile.avatar}
@@ -928,7 +954,7 @@ export default function App() {
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <span className="text-xs leading-none select-none">
+                        <span className="text-xs leading-none select-none text-white">
                           {userProfile?.avatar === 'hacker'
                             ? '👾'
                             : userProfile?.avatar === 'wizard'
@@ -950,13 +976,19 @@ export default function App() {
                   </div>
                   {/* Status dot */}
                   <span
-                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#060913] ${
-                      userProfile ? 'bg-emerald-400' : 'bg-amber-400'
+                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#121212] ${
+                      userProfile ? 'bg-white' : 'bg-zinc-400'
                     }`}
                   />
                 </button>
 
-                <button className="close mobile" onClick={() => setSidebar(false)}>
+                <button
+                  type="button"
+                  className="close playful-pop p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  onClick={() => setSidebar(false)}
+                  title="Collapse sidebar (fill workspace)"
+                  aria-label="Collapse sidebar (fill workspace)"
+                >
                   <X size={18} />
                 </button>
               </div>
@@ -966,16 +998,31 @@ export default function App() {
               <MessageSquarePlus size={17} /> New conversation
             </button>
 
-            {/* Conversation Search (Blended Dark Theme) */}
+            {/* Go back to landing page */}
+            <a
+              href="https://docx.freebuff.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="playful-pop my-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-200 hover:text-white border border-white/10 hover:border-white/20 transition-all text-xs font-semibold flex items-center justify-between"
+              title="Go back to landing page (https://docx.freebuff.app)"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-white" />
+                <span>Landing page -&gt;</span>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-mono">↗</span>
+            </a>
+
+            {/* Conversation Search (Monochrome Theme) */}
             <div className="px-1 my-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#090d16] border border-[#1f293d] text-xs text-[#7e92b8] focus-within:border-[#8ea8ff]">
-                <Search size={13} className="text-[#64748b]" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#181818] border border-white/10 text-xs text-zinc-300 focus-within:border-white/30">
+                <Search size={13} className="text-zinc-500" />
                 <input
                   type="text"
                   value={searchHistory}
                   onChange={e => setSearchHistory(e.target.value)}
                   placeholder="Search chats..."
-                  className="bg-transparent text-xs text-white outline-none w-full placeholder:text-[#5f7092]"
+                  className="bg-transparent text-xs text-white outline-none w-full placeholder:text-zinc-500"
                 />
               </div>
             </div>
@@ -1063,27 +1110,30 @@ export default function App() {
                     title="Hide options"
                   >
                     <div className="flex items-center gap-2">
-                      <ChevronDown size={17} className="text-[#8ea8ff]" />
+                      <ChevronDown size={17} className="text-zinc-400" />
                       <span>Hide options</span>
                     </div>
-                    <ChevronDown size={15} className="text-[#8ea8ff]" />
+                    <ChevronDown size={15} className="text-zinc-400" />
                   </button>
 
                   <div className="flex flex-col gap-1 max-h-[46vh] overflow-y-auto pr-0.5">
                     <button className="playful-pop" onClick={() => setView('media')}>
-                      <Film size={17} className="text-cyan-400" /> Media Studio (Images & Video)
+                      <Film size={17} className="text-zinc-300" /> Media Studio (Images & Video)
                     </button>
                     <button className="playful-pop" onClick={() => setView('build')}>
-                      <Hammer size={17} className="text-amber-400" /> Build Mode
+                      <Hammer size={17} className="text-zinc-300" /> Build Mode
+                    </button>
+                    <button className="playful-pop" onClick={() => goSettings('workers')}>
+                      <Users size={17} className="text-zinc-300" /> Multiple Workers (Alpha)
                     </button>
                     <button className="playful-pop" onClick={() => setShowTour(true)}>
-                      <Gamepad2 size={17} className="text-cyan-400" /> Interactive Guide
+                      <Gamepad2 size={17} className="text-zinc-300" /> Interactive Guide
                     </button>
                     <button className="playful-pop" onClick={() => setShowPromptLib(true)}>
-                      <Sparkles size={17} className="text-[#8ea8ff]" /> Prompt Library
+                      <Sparkles size={17} className="text-zinc-300" /> Prompt Library
                     </button>
                     <button className="playful-pop" onClick={() => goSettings('tokensaver')}>
-                      <Zap size={17} className="text-emerald-400" /> Token Saver Active
+                      <Zap size={17} className="text-zinc-300" /> Token Saver Active
                     </button>
                     <button className="playful-pop" onClick={() => goSettings('appearance')}>
                       <Palette size={17} /> Themes & Styling
@@ -1101,7 +1151,7 @@ export default function App() {
                       <ShieldCheck size={17} /> Privacy & security
                     </button>
                     <button className="playful-pop" onClick={() => setView('about')}>
-                      <Orbit size={17} /> About Aplx
+                      <Orbit size={17} /> About VileDocx
                     </button>
                     <button
                       type="button"
@@ -1116,35 +1166,44 @@ export default function App() {
                 </div>
               )}
 
-              {/* Install Aplx button placed directly below Options */}
+              {/* Install VileDocx button placed directly below Options */}
               <button
                 type="button"
-                id="install-aplx-sidebar-btn"
+                id="install-viledocx-sidebar-btn"
                 className="github-side playful-pop w-full text-left cursor-pointer flex items-center justify-between"
                 onClick={() => setShowInstallModal(true)}
-                title="Install Aplx CLI or Website"
+                title="Install VileDocx CLI or Website"
               >
                 <div className="flex items-center gap-2">
                   <Download size={14} className="text-[#8ea8ff]" />
-                  <span>Install Aplx ↗</span>
+                  <span>Install VileDocx ↗</span>
                 </div>
               </button>
 
               <div className="web-status">
-                <span /> Aplx Web <small>{getProvider(providerConfig.provider).name}</small>
+                <span /> Docx Web <small>{getProvider(providerConfig.provider).name}</small>
               </div>
             </div>
           </aside>
 
-          <main className="chat">
+          {sidebar && (
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 min-[761px]:hidden"
+              onClick={() => setSidebar(false)}
+              aria-hidden="true"
+            />
+          )}
+
+          <main className={`chat ${sidebar ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
             {/* Sticky Model & Actions Header */}
             <header>
               <div className="flex items-center gap-3">
                 <button
-                  className="icon mobile hidden max-[760px]:inline-flex playful-pop"
-                  onClick={() => setSidebar(true)}
-                  title="Open Navigation"
-                  aria-label="Open Navigation"
+                  type="button"
+                  className="icon playful-pop inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/10 text-white transition-colors cursor-pointer"
+                  onClick={() => setSidebar(prev => !prev)}
+                  title={sidebar ? "Collapse sidebar (fill workspace)" : "Open sidebar"}
+                  aria-label={sidebar ? "Collapse sidebar (fill workspace)" : "Open sidebar"}
                 >
                   <Menu size={18} />
                 </button>
@@ -1195,26 +1254,37 @@ export default function App() {
                         });
                       }
                     }}
-                    className="playful-pop hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/50 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs font-semibold cursor-pointer shadow-sm shadow-cyan-950/40"
+                    className="playful-pop hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/25 text-zinc-200 text-xs font-semibold cursor-pointer shadow-sm"
                     title={`⚡ ${localDetection.models.length} local models detected (${localDetection.provider === 'ollama' ? 'Ollama' : 'LM Studio'}). Click to switch to offline model.`}
                   >
-                    <Cpu size={13} className="text-cyan-400" />
+                    <Cpu size={13} className="text-white" />
                     <span>⚡ {localDetection.models.length} Offline Model{localDetection.models.length > 1 ? 's' : ''} Ready</span>
                   </button>
                 )}
               </div>
 
               <div className="header-actions items-center flex gap-2">
+                <a
+                  href="https://docx.freebuff.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-zinc-200 hover:text-white transition-all cursor-pointer"
+                  title="Go back to landing page (https://docx.freebuff.app)"
+                >
+                  <Sparkles size={13} className="text-white" />
+                  <span>Landing page -&gt;</span>
+                </a>
+
                 {/* Minimalist Profile Picture Avatar in Header */}
                 <button
                   type="button"
                   onClick={() => setShowAccountModal(true)}
-                  className="profile-avatar-btn playful-pop group border border-[#233454] hover:border-[#8ea8ff] bg-[#0c1322] transition-all cursor-pointer flex-none"
+                  className="profile-avatar-btn playful-pop group border border-white/10 hover:border-white/30 bg-[#1e1e1e] transition-all cursor-pointer flex-none"
                   title={userProfile ? `${userProfile.name} • Click to manage profile & avatar` : 'Offline Account • Click to customize'}
                   aria-label="Manage Account Profile"
                 >
-                  <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[1.5px] shadow-sm shadow-indigo-950/40 aspect-square flex-none overflow-hidden">
-                    <div className="w-full h-full rounded-full bg-[#080d1a] flex items-center justify-center overflow-hidden text-xs aspect-square">
+                  <div className="w-[26px] h-[26px] rounded-full bg-white/20 p-[1.5px] shadow-sm aspect-square flex-none overflow-hidden">
+                    <div className="w-full h-full rounded-full bg-[#121212] flex items-center justify-center overflow-hidden text-xs aspect-square">
                       {userProfile?.avatarType === 'custom' && userProfile.avatar ? (
                         <img
                           src={userProfile.avatar}
@@ -1223,7 +1293,7 @@ export default function App() {
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <span className="text-xs leading-none select-none">
+                        <span className="text-xs leading-none select-none text-white">
                           {userProfile?.avatar === 'hacker'
                             ? '👾'
                             : userProfile?.avatar === 'wizard'
@@ -1244,8 +1314,8 @@ export default function App() {
                     </div>
                   </div>
                   <span
-                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#090f1d] ${
-                      userProfile ? 'bg-emerald-400' : 'bg-amber-400'
+                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#121212] ${
+                      userProfile ? 'bg-white' : 'bg-zinc-400'
                     }`}
                   />
                 </button>
@@ -1255,6 +1325,12 @@ export default function App() {
                   stats={tokenStats}
                   onOpenSettings={() => goSettings('tokensaver')}
                   onResetStats={setTokenStats}
+                />
+                <SwarmMetricsHeaderWidget
+                  providerConfig={providerConfig}
+                  preferences={preferences}
+                  onUpdatePreferences={setPreferences}
+                  onOpenSettings={() => goSettings('workers')}
                 />
                 <button className="icon playful-pop" title="Prompt Library (Ctrl+K)" onClick={() => setShowPromptLib(true)}>
                   <Sparkles size={18} />
@@ -1272,17 +1348,17 @@ export default function App() {
 
             {conversations.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in my-auto">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 mb-4 shadow-lg shadow-indigo-950/40">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white mb-4 shadow-lg">
                   <MessageSquarePlus size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">No Active Conversation</h3>
-                <p className="text-xs text-[#8094b8] max-w-sm mb-6 leading-relaxed">
+                <p className="text-xs text-zinc-400 max-w-sm mb-6 leading-relaxed">
                   You deleted all conversations. Click below to start a fresh, private discussion with your chosen AI models.
                 </p>
                 <button
                   type="button"
                   onClick={handleCreateNewChat}
-                  className="primary playful-pop inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-indigo-950/60 cursor-pointer"
+                  className="primary playful-pop inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 shadow-lg cursor-pointer"
                 >
                   <MessageSquarePlus size={18} />
                   <span>Start a conversation!</span>
@@ -1315,7 +1391,7 @@ export default function App() {
                       onDismissGuide={() => {
                         setGuideDismissed(true);
                         try {
-                          localStorage.setItem('aplx:guide_dismissed', 'true');
+                          localStorage.setItem('viledocx:guide_dismissed', 'true');
                         } catch {}
                       }}
                     />
@@ -1361,15 +1437,15 @@ export default function App() {
 
                   {/* Anti-DDoS Security Banner */}
                   {ddosAlert && (
-                    <div className="mb-2.5 p-2.5 px-4 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-2 shadow-lg shadow-amber-950/50 animate-bounce">
+                    <div className="mb-2.5 p-2.5 px-4 rounded-xl bg-white/10 border border-white/20 text-white text-xs flex items-center justify-between gap-2 shadow-lg animate-bounce">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck size={16} className="text-amber-400 flex-none" />
+                        <ShieldCheck size={16} className="text-white flex-none" />
                         <span className="font-medium">{ddosAlert}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setDdosAlert(null)}
-                        className="text-amber-400 hover:text-white cursor-pointer"
+                        className="text-zinc-400 hover:text-white cursor-pointer"
                         title="Dismiss"
                       >
                         <X size={13} />
@@ -1420,6 +1496,7 @@ export default function App() {
             back={() => setView('chat')}
             onAbout={() => setView('about')}
             onPrivacy={() => setView('privacy')}
+            onNavigateToBuild={() => setView('build')}
           />
         </div>
       )}
@@ -1449,8 +1526,10 @@ export default function App() {
         <div key="view-build" className="workspace-container animate-workspace-slide-in">
           <BuildModeView
             providerConfig={providerConfig}
+            preferences={preferences}
+            onUpdatePreferences={updatePreferences}
             onLeave={() => setView('chat')}
-            onOpenSettings={() => goSettings('provider')}
+            onOpenSettings={(tab?: string) => goSettings((tab as any) || 'workers')}
           />
         </div>
       )}
@@ -1502,8 +1581,6 @@ function Landing({
   settings,
   privacy,
   about,
-  petId = 'fox',
-  soundEnabled,
   onOpenGuide,
 }: {
   launch: () => void;
@@ -1514,157 +1591,196 @@ function Landing({
   soundEnabled?: boolean;
   onOpenGuide?: () => void;
 }) {
-  const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
-
-  const handleMascotClick = (e: React.MouseEvent) => {
-    if (soundEnabled) sounds.playPetChirp();
-    const id = Date.now();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    setHearts(prev => [...prev.slice(-3), { id, x }]);
-    setTimeout(() => {
-      setHearts(prev => prev.filter(h => h.id !== id));
-    }, 1200);
-  };
-
   return (
-    <main className="landing animate-fade-in-up">
-      <nav>
-        <div className="wordmark">
-          <GalaxyLogoMini size={26} /> APLX
+    <main className="landing w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 py-6 text-center animate-fade-in-up">
+      {/* Top Professional Navigation Bar */}
+      <nav className="w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-white/[0.08]">
+        <div className="wordmark flex items-center gap-3">
+          <GalaxyLogoMini size={28} />
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-base tracking-tight text-white font-mono">DOCX</span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white text-black">
+                V3
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-400">Universal AI Engineering Dock</span>
+          </div>
         </div>
-        <div className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <a
-            href="https://aplx.freebuff.app"
-            id="back-to-landing-btn"
-            className="landing-nav-btn playful-pop"
-            style={{
-              fontSize: '13px',
-              padding: '7px 14px',
-              borderRadius: '8px',
-              color: '#d6e4ff',
-              background: 'rgba(255, 255, 255, 0.07)',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              fontWeight: 500,
-            }}
+
+        <div className="landing-nav-links flex items-center gap-2.5 sm:gap-3">
+          <button
+            onClick={about}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
           >
-            Back to landing page -&gt;
-          </a>
-          <button onClick={about} className="landing-nav-btn playful-pop" style={{ fontSize: '13px', padding: '7px 14px', borderRadius: '8px', color: '#a0b0d0', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             About
           </button>
-          <button onClick={privacy} className="landing-nav-btn playful-pop" style={{ fontSize: '13px', padding: '7px 14px', borderRadius: '8px', color: '#a0b0d0', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <button
+            onClick={privacy}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+          >
             Privacy
           </button>
-          <button onClick={launch} className="nav-launch playful-pop">
-            Launch Aplx <ArrowUp size={14} />
+          <button
+            onClick={launch}
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-black bg-white hover:bg-zinc-200 border border-white/40 shadow-sm shadow-white/10 inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+          >
+            <span>Launch</span>
+            <ArrowUp size={13} style={{ transform: 'rotate(45deg)' }} />
           </button>
         </div>
       </nav>
-      {/* Updates sit at the top of the lobby, like a game's welcome screen. */}
-      <div className="announce-board" role="status" aria-label="V2 announcements">
-        <div className="announce-board-header">
-          <Megaphone size={14} />
-          <span>What's new in Aplx</span>
-          <span className="announce-board-dots">•••</span>
+
+      {/* Main Professional Hero - Perfectly Centered */}
+      <div className="hero flex flex-col items-center justify-center text-center max-w-4xl w-full mx-auto my-auto py-10 sm:py-16">
+        {/* Sleek Astral Core Visual */}
+        <div className="mb-6 flex justify-center items-center">
+          <GalaxyLogo size={190} />
         </div>
-        <ul className="announce-board-list">
-          <li className="announce-board-item">
-            <CheckCircle2 size={14} className="announce-board-check" />
-            <span className="announce-board-text"><span className="announce-board-tag">NEW</span>Brand new <b>V2</b>, PC exclusive, works on every OS!</span>
-          </li>
-          <li className="announce-board-item">
-            <CheckCircle2 size={14} className="announce-board-check" />
-            <span className="announce-board-text"><span className="announce-board-tag">NEW</span>Features added that were previously limited!</span>
-          </li>
-          <li className="announce-board-item">
-            <CheckCircle2 size={14} className="announce-board-check" />
-            <span className="announce-board-text"><span className="announce-board-tag">NEW</span>Run locally using .bat, .sh, or .command for your OS.</span>
-          </li>
-        </ul>
-      </div>
-      <div className="hero animate-float-hero">
-        {/* Interactive Galaxy Logo — dotted "A" core with two orbiting dots */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
-          <GalaxyLogo size={225} />
+
+        {/* Editorial Pill Kicker: Docx V3 */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.15] text-xs font-mono text-zinc-300 mb-5 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
+          <span className="text-white font-bold tracking-wide">DOCX</span>
+          <span className="text-zinc-500">•</span>
+          <span className="text-zinc-300">V3 ENGINEERING WORKSTATION</span>
         </div>
-        <div className="eyebrow flex items-center justify-center gap-2">
-          <Sparkles size={14} className="text-[#8ea8ff] animate-twinkle" />
-          <span>YOUR PERSONAL DOCK FOR AI APIS</span>
-          {/* Playful Floating Pet Mascot on Hero */}
-          <span
-            onClick={handleMascotClick}
-            title="Click me for pets! ✨"
-            className="relative cursor-pointer inline-block select-none playful-pop ml-1"
-          >
-            <PetArtwork petId={petId as any} size={28} mood="happy" />
-            {hearts.map(h => (
-              <span
-                key={h.id}
-                style={{ left: `${h.x}px`, top: '-10px' }}
-                className="absolute text-rose-400 text-sm pointer-events-none animate-float-heart z-20"
-              >
-                ❤️
-              </span>
-            ))}
+
+        {/* High-Contrast Professional Headline */}
+        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.08] max-w-3xl">
+          The Private AI Dock for{' '}
+          <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+            All Your Models.
           </span>
-        </div>
-        <h1>
-          The private dock for <i className="lively-shimmer-text">all your AI APIs.</i>
         </h1>
-        <p>
-          Aplx is a universal AI dock and intuitive guide for anyone who wants to run their own API keys easily. No middleman servers — your credentials stay 100% safe in your browser.
+
+        {/* Crisp Subheading */}
+        <p className="text-sm sm:text-base text-zinc-300 max-w-2xl leading-relaxed mb-4">
+          <strong className="text-white font-bold">Docx</strong> is a zero-telemetry, client-first developer workstation for 8+ leading AI providers. Connect Gemini, GPT-4o, Claude 3.7, Groq, Mistral, and local Ollama directly from your browser — no middleman proxies, no subscription bloat.
         </p>
 
-        <div className="hero-actions">
-          <a
-            href="https://aplx.freebuff.app"
-            id="hero-back-to-landing-btn"
-            className="secondary playful-pop"
-            style={{
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+        {/* Vile Acronym Clarification Notice */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/15 text-xs text-zinc-300 mb-6 shadow-sm max-w-xl mx-auto">
+          <Info size={13} className="text-white flex-shrink-0" />
+          <span>
+            <strong className="text-white font-semibold">Vile</strong> stands for — <span className="text-white font-medium">"Virtual Interface & Linking Environment"</span>, and not the actual definition
+          </span>
+        </div>
+
+        {/* Prominently Redesigned & Centered Disclaimer Box */}
+        <div className="w-full max-w-2xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl bg-[#141414] border border-white/20 shadow-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left transition-all hover:border-white/35">
+          <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
+            <ShieldAlert size={20} className="text-white" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase bg-white text-black">
+                SYSTEM NOTICE
+              </span>
+              <span className="text-xs font-mono font-semibold text-white">V3 Beta Update</span>
+            </div>
+            <p className="text-xs sm:text-sm text-zinc-300 font-mono leading-relaxed">
+              <strong className="text-white font-bold">V3 Beta version</strong> - Maximum fixes made in the SWARM mode, You can use it with caution.
+            </p>
+            <div className="pt-2 border-t border-white/10 text-xs text-zinc-400 font-sans flex items-center justify-center sm:justify-start gap-1.5 leading-relaxed">
+              <Info size={13} className="text-white flex-shrink-0" />
+              <span>
+                (<strong>Vile</strong> stands for — <span className="text-white font-medium">"Virtual Interface & Linking Environment"</span>, and not the actual definition)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Controls Toolbar - Centered */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-12 w-full max-w-2xl mx-auto">
+          <button
+            className="px-6 py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs tracking-wider uppercase inline-flex items-center justify-center gap-2 shadow-lg shadow-white/10 transition-all cursor-pointer active:scale-95 flex-1 min-w-[190px]"
+            onClick={launch}
           >
-            Back to landing page -&gt;
-          </a>
-          <button className="primary playful-pop" onClick={launch}>
-            Launch Workspace <ArrowUp size={16} />
+            <span>Launch Workspace</span>
+            <ArrowUp size={15} style={{ transform: 'rotate(45deg)' }} />
+          </button>
+          <button
+            className="px-5 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/20 hover:border-white/40 text-white font-medium text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 flex-1 min-w-[190px]"
+            onClick={settings}
+          >
+            <KeyRound size={15} className="text-zinc-300" />
+            <span>Configure API Keys</span>
           </button>
           {onOpenGuide && (
-            <button className="secondary playful-pop" onClick={onOpenGuide}>
-              <Gamepad2 size={16} className="text-cyan-400" /> Easy API Setup Guide
+            <button
+              className="px-5 py-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] border border-white/15 hover:border-white/30 text-zinc-200 hover:text-white font-medium text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 flex-1 min-w-[190px]"
+              onClick={onOpenGuide}
+            >
+              <Terminal size={15} className="text-zinc-300" />
+              <span>Interactive Guide</span>
             </button>
           )}
-          <button className="secondary playful-pop" onClick={settings}>
-            <KeyRound size={16} /> Plug in an API Key
-          </button>
         </div>
-        <div className="trust">
-          <span className="playful-pop">
-            <ShieldCheck size={17} /> 100% Private (Keys Stored in Browser)
-          </span>
-          <span className="playful-pop">
-            <KeyRound size={17} /> One Dock, 8+ Top AI Providers
-          </span>
-          <span className="playful-pop">
-            <Orbit size={17} /> Direct Browser → API Routing
-          </span>
-          <span className="playful-pop">
-            <Zap size={17} /> Built-in Token Saver & Guidance
-          </span>
+
+        {/* Professional Architectural Trust Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-left w-full">
+          <div className="p-4 rounded-xl bg-neutral-900/60 border border-white/[0.1] hover:border-white/30 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white mb-2.5">
+              <Orbit size={16} />
+            </div>
+            <h3 className="text-xs font-bold text-white mb-1">Direct Model Routing</h3>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Zero intermediary servers. Authenticated requests stream straight from your browser to the designated AI endpoints.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-neutral-900/60 border border-white/[0.1] hover:border-white/30 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white mb-2.5">
+              <Users size={16} />
+            </div>
+            <h3 className="text-xs font-bold text-white mb-1">Autonomous Swarm</h3>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              6-worker architectural debate + Watchman arbiter. <span className="text-neutral-300 font-mono text-[10.5px] block mt-1">⚠️ V3 Alpha has MANY errors in SWARM mode, DO NOT RUN BUILD SWARM MODE, unless you want to</span>
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-neutral-900/60 border border-white/[0.1] hover:border-white/30 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white mb-2.5">
+              <ShieldCheck size={16} />
+            </div>
+            <h3 className="text-xs font-bold text-white mb-1">Client-Side Vault</h3>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              WebCrypto SHA-256 integrity verification and encrypted browser storage. No tracking cookies or remote database.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-neutral-900/60 border border-white/[0.1] hover:border-white/30 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white mb-2.5">
+              <Zap size={16} />
+            </div>
+            <h3 className="text-xs font-bold text-white mb-1">Token Saver Engine</h3>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Sliding-window context pruning that preserves ~22% of token bandwidth while keeping model recall sharp.
+            </p>
+          </div>
         </div>
       </div>
-      <footer>
-        APLX WEB <span>•</span> A project by R3NZ <span>•</span>
-        <a href="https://github.com/R3nz/Aplx" target="_blank" rel="noreferrer">
-          GITHUB · INSTALL APLX ↗
-        </a>
+
+      {/* Clean Dark Executive Footer - Centered */}
+      <footer className="w-full max-w-5xl mx-auto mt-auto pt-8 pb-4 text-xs font-mono text-neutral-400 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08]">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-white">DOCX WEB</span>
+          <span>•</span>
+          <span className="text-white font-semibold">Universal AI Dock</span>
+          <span>•</span>
+          <span>V3 Edition</span>
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <a
+            href="https://github.com/aplx-renz-sudo/Docx-web-app"
+            target="_blank"
+            rel="noreferrer"
+            className="text-neutral-400 hover:text-white transition-colors"
+          >
+            GITHUB REPOSITORY ↗
+          </a>
+        </div>
       </footer>
     </main>
   );
@@ -1690,21 +1806,21 @@ function PromptDeck({
   return (
     <div className="space-y-4">
       {showGuideBanner && onOpenGuide && (
-        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-950/60 via-[#10172b] to-purple-950/60 border border-indigo-500/30 flex items-center justify-between gap-4 relative animate-fade-in">
+        <div className="p-4 rounded-xl bg-[#181818] border border-white/10 flex items-center justify-between gap-4 relative animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-cyan-300 flex-none">
-              <Gamepad2 size={20} />
+            <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white flex-none">
+              <Terminal size={18} />
             </div>
             <div>
-              <b className="text-sm text-white block">New to Aplx? Start Interactive Walkthrough</b>
-              <span className="text-xs text-[#8ea0c2]">Learn about multi-model switching, token savings, and pets!</span>
+              <b className="text-xs sm:text-sm text-white block">New to Docx? Start Interactive Walkthrough</b>
+              <span className="text-[11px] text-zinc-400">Learn about direct multi-model switching, 6-worker swarms, and token savings.</span>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-none">
             <button
               type="button"
               onClick={onOpenGuide}
-              className="playful-pop px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-black hover:bg-indigo-100 cursor-pointer"
+              className="playful-pop px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-black hover:bg-zinc-200 cursor-pointer"
             >
               Start Guide →
             </button>
@@ -1712,7 +1828,7 @@ function PromptDeck({
               <button
                 type="button"
                 onClick={onDismissGuide}
-                className="playful-pop p-1.5 rounded-lg text-xs text-[#7f94bc] hover:text-white hover:bg-white/10 cursor-pointer"
+                className="playful-pop p-1.5 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-white/10 cursor-pointer"
                 title="Dismiss banner"
                 aria-label="Dismiss banner"
               >
@@ -1776,7 +1892,7 @@ function MessageView({
           <img
             src={userProfile.avatar}
             alt="You"
-            className="w-full h-full object-cover rounded-lg aspect-square"
+            className="w-full h-full object-cover rounded-full aspect-square"
             referrerPolicy="no-referrer"
           />
         );
@@ -1791,7 +1907,7 @@ function MessageView({
       }
       return 'Y';
     }
-    return 'A';
+    return <GalaxyLogoMini size={18} />;
   };
 
   return (
@@ -1800,39 +1916,41 @@ function MessageView({
       <div className="message-body">
         <div className="message-meta flex items-center justify-between">
           <div>
-            {message.role === 'user' ? (userProfile?.name || 'You') : 'Aplx'}{' '}
+            {message.role === 'user' ? (userProfile?.name || 'You') : 'VileDocx'}{' '}
             <time>{message.time}</time>
           </div>
         </div>
 
         {isThinking ? (
-          <ThinkingIndicator modelName="Aplx" />
+          <ThinkingIndicator modelName="VileDocx" />
         ) : isEditing ? (
           <form onSubmit={handleSaveEdit} className="my-2 space-y-2">
             <textarea
               rows={3}
               value={draftEdit}
               onChange={e => setDraftEdit(e.target.value)}
-              className="w-full p-3 rounded-xl bg-[#090d16] border border-[#8ea8ff] text-sm text-[#eef3ff] outline-none font-sans"
+              className="w-full p-3 rounded-xl bg-[#2f2f2f] border border-white/[0.15] text-sm text-[#ececec] outline-none font-sans"
             />
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="playful-pop px-3 py-1 bg-[#8ea8ff] text-[#0a1020] rounded-md text-xs font-bold"
+                className="playful-pop px-3 py-1 bg-white text-black rounded-md text-xs font-bold"
               >
                 Save & Resend
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="playful-pop px-3 py-1 bg-[#1a233a] text-[#8ea8ff] rounded-md text-xs"
+                className="playful-pop px-3 py-1 bg-[#333333] text-[#b4b4b4] rounded-md text-xs"
               >
                 Cancel
               </button>
             </div>
           </form>
         ) : message.content ? (
-          <Mark text={message.content} />
+          <div className={message.role === 'user' ? 'user-bubble-content' : 'model-content'}>
+            <Mark text={message.content} />
+          </div>
         ) : null}
 
         {/* Message Action Tools */}
@@ -1916,7 +2034,7 @@ function Composer({
               className="ribbon-pill ribbon-pill-guide playful-pop"
               title="Interactive Help & Guide Walkthrough"
             >
-              <HelpCircle size={13} style={{ color: '#22d3ee' }} />
+              <HelpCircle size={13} className="text-zinc-300" />
               <span>Guide & Help</span>
             </button>
             <button
@@ -1925,7 +2043,7 @@ function Composer({
               className="ribbon-pill ribbon-pill-prompts playful-pop"
               title="Prompt Template Library (Ctrl+K)"
             >
-              <Sparkles size={13} style={{ color: '#fbbf24' }} />
+              <Sparkles size={13} className="text-zinc-300" />
               <span>Prompt Library</span>
             </button>
           </div>
@@ -1936,7 +2054,7 @@ function Composer({
               className="ribbon-pill ribbon-pill-tokensaver playful-pop"
               title="Token Saver Optimizer Active"
             >
-              <Zap size={12} style={{ color: '#34d399' }} />
+              <Zap size={12} className="text-zinc-300" />
               <span>Token Saver Active</span>
             </button>
           </div>
@@ -1949,7 +2067,7 @@ function Composer({
               type="button"
               onClick={onAttachFile}
               title="Attach file (text/code/json)"
-              className="playful-pop p-1.5 text-[#7385a8] hover:text-[#dce5fb] hover:bg-[#192238] rounded-lg transition-colors cursor-pointer"
+              className="playful-pop p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             >
               <Paperclip size={16} />
             </button>
@@ -1957,7 +2075,7 @@ function Composer({
               type="button"
               onClick={onOpenPrompts}
               title="Open Prompt Library (Ctrl+K)"
-              className="playful-pop p-1.5 text-[#7385a8] hover:text-[#8ea8ff] hover:bg-[#192238] rounded-lg transition-colors cursor-pointer"
+              className="playful-pop p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             >
               <Sparkles size={16} />
             </button>
@@ -1967,8 +2085,8 @@ function Composer({
               title={isRecordingVoice ? 'Stop voice recording' : 'Dictate with voice'}
               className={`playful-pop p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isRecordingVoice
-                  ? 'bg-rose-500/20 text-rose-400 animate-pulse'
-                  : 'text-[#7385a8] hover:text-[#dce5fb] hover:bg-[#192238]'
+                  ? 'bg-white/20 text-white animate-pulse'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/10'
               }`}
             >
               {isRecordingVoice ? <MicOff size={16} /> : <Mic size={16} />}
@@ -1985,7 +2103,7 @@ function Composer({
                 send();
               }
             }}
-            placeholder="Message Aplx…"
+            placeholder="Message VileDocx…"
             rows={1}
             className="flex-1"
           />
@@ -2021,8 +2139,9 @@ function FullSettingsModal({
   back,
   onAbout,
   onPrivacy,
+  onNavigateToBuild,
 }: {
-  tab: 'provider' | 'tokensaver' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'privacy' | 'about';
+  tab: 'provider' | 'tokensaver' | 'workers' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'privacy' | 'about';
   setTab: (x: typeof tab) => void;
   providerConfig: ProviderConfig;
   onProviderChange: (c: ProviderConfig) => void;
@@ -2036,29 +2155,31 @@ function FullSettingsModal({
   back: () => void;
   onAbout: () => void;
   onPrivacy?: () => void;
+  onNavigateToBuild?: () => void;
 }) {
   const SECTIONS = [
     {
       title: 'AI Engines & Efficiency',
       items: [
-        { id: 'provider' as const, label: 'AI Provider & Models', icon: Sparkles, badge: '8 APIs', color: 'text-indigo-400' },
-        { id: 'tokensaver' as const, label: 'Token Saver Engine', icon: Zap, badge: '⚡ ~22%', color: 'text-emerald-400' },
+        { id: 'provider' as const, label: 'AI Provider & Models', icon: Sparkles, badge: '8 APIs', color: 'text-zinc-200' },
+        { id: 'tokensaver' as const, label: 'Token Saver Engine', icon: Zap, badge: '⚡ ~22%', color: 'text-zinc-200' },
+        { id: 'workers' as const, label: 'Multiple Workers (Alpha)', icon: Users, badge: 'Build Mode Only', color: 'text-zinc-200' },
       ],
     },
     {
       title: 'Look & Companions',
       items: [
-        { id: 'appearance' as const, label: 'Themes & Customizer', icon: Palette, badge: '8 Themes', color: 'text-purple-400' },
-        { id: 'pets' as const, label: 'Companion Pets', icon: Cat, badge: 'Interactive', color: 'text-amber-400' },
-        { id: 'thinking' as const, label: 'Thinking Deliberation', icon: BrainCircuit, badge: '5 Styles', color: 'text-cyan-400' },
-        { id: 'persona' as const, label: 'AI Persona & Creativity', icon: Sliders, badge: '7 Modes', color: 'text-pink-400' },
+        { id: 'appearance' as const, label: 'Themes & Customizer', icon: Palette, badge: '8 Themes', color: 'text-zinc-200' },
+        { id: 'pets' as const, label: 'Companion Pets', icon: Cat, badge: 'Interactive', color: 'text-zinc-200' },
+        { id: 'thinking' as const, label: 'Thinking Deliberation', icon: BrainCircuit, badge: '5 Styles', color: 'text-zinc-200' },
+        { id: 'persona' as const, label: 'AI Persona & Creativity', icon: Sliders, badge: '7 Modes', color: 'text-zinc-200' },
       ],
     },
     {
       title: 'Security & Platform',
       items: [
-        { id: 'privacy' as const, label: 'Data & Privacy Hub', icon: ShieldCheck, badge: '100% Client', color: 'text-emerald-400' },
-        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V2', color: 'text-blue-400' },
+        { id: 'privacy' as const, label: 'Data & Privacy Hub', icon: ShieldCheck, badge: '100% Client', color: 'text-zinc-200' },
+        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V3', color: 'text-zinc-200' },
       ],
     },
   ];
@@ -2072,7 +2193,7 @@ function FullSettingsModal({
         </button>
         <div className="wordmark flex items-center gap-2.5">
           <GalaxyLogoMini size={22} />
-          <span>APLX</span>
+          <span>VILEDOCX</span>
           <span className="text-[11px] font-mono font-medium text-[#8ea8ff] bg-[#14203d] border border-[#233560] px-2.5 py-0.5 rounded-full tracking-wider whitespace-nowrap">
             SETTINGS HUB
           </span>
@@ -2167,6 +2288,14 @@ function FullSettingsModal({
               />
             )}
 
+            {tab === 'workers' && (
+              <MultipleWorkersSettingsTab
+                preferences={preferences}
+                onUpdatePreferences={updater => setPreferences(updater(preferences))}
+                onNavigateToBuild={onNavigateToBuild}
+              />
+            )}
+
             {tab === 'appearance' && (
               <AppearanceSettings
                 preferences={preferences}
@@ -2208,13 +2337,13 @@ function FullSettingsModal({
               <div className="space-y-8">
                 <div>
                   <div className="section-kicker">ABOUT</div>
-                  <h2 className="text-2xl font-bold text-white tracking-tight mt-1">Aplx Web</h2>
-                  <p className="lead text-sm text-[#8da0c4] mt-1">The browser-based, private member of the Aplx ecosystem.</p>
+                  <h2 className="text-2xl font-bold text-white tracking-tight mt-1">VileDocx Web</h2>
+                  <p className="lead text-sm text-[#8da0c4] mt-1">The browser-based, private member of the VileDocx ecosystem.</p>
                 </div>
                 <div className="about-grid">
                   <div>
                     <small>VERSION</small>
-                    <b>V2 Edition</b>
+                    <b>V3 Edition</b>
                   </div>
                   <div>
                     <small>BUILT BY</small>
@@ -2245,14 +2374,14 @@ function FullSettingsModal({
                   <p>
                     R3nz (developer) , Github copilot, Claude Sonnet and Haiku and Opus models, CodeX (GPT-5.6), Kimi K3, GPT-4, minimax-m3, Grok, Le chat Mistral, Gemini, and many more AIs!
                   </p>
-                  <a href="https://github.com/R3nz/Aplx" target="_blank" rel="noreferrer" className="about-github-btn playful-pop">
+                  <a href="https://github.com/aplx-renz-sudo/Docx-web-app" target="_blank" rel="noreferrer" className="about-github-btn playful-pop">
                     <ExternalLink size={15} />
-                    <span>Explore & install Aplx on GitHub</span>
+                    <span>Explore & install VileDocx on GitHub</span>
                     <span className="text-xs text-[#8ea8ff]">↗</span>
                   </a>
                 </div>
                 <p className="fine">
-                  Aplx Desktop supports offline + online workflows. Aplx Web runs purely in your browser and connects only to the provider credentials you configure.
+                  VileDocx Desktop supports offline + online workflows. VileDocx Web runs purely in your browser and connects only to the provider credentials you configure.
                 </p>
                 <div
                   style={{
@@ -2267,12 +2396,24 @@ function FullSettingsModal({
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 700,
                     color: '#fef08a',
-                    letterSpacing: '0.06em',
+                    letterSpacing: '0.05em',
                     textShadow: '0 0 10px rgba(250, 204, 21, 0.6)',
+                  }}
+                >
+                  VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
+                </div>
+                <div
+                  style={{
+                    marginTop: '8px',
+                    textAlign: 'center',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    color: '#86868b',
+                    letterSpacing: '0.04em',
                     textTransform: 'uppercase',
                   }}
                 >
-                  WEBSITE FOR APLX :- CURRENT VERSION, V2
+                  WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3
                 </div>
               </div>
             )}

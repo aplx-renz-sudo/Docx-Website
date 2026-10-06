@@ -25,20 +25,20 @@ export function TokenSaverBadge({ mode, stats, onOpenSettings, onResetStats }: T
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono transition-all border ${
           mode !== 'off'
-            ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-400 hover:border-emerald-400'
+            ? 'bg-white/10 border-white/20 text-white hover:border-white/40'
             : 'bg-white/[0.04] border-white/[0.08] text-[#86868b] hover:border-white/[0.15]'
         }`}
         title="Token Saver Status & Metrics"
       >
-        <Zap size={11} className={mode !== 'off' ? 'text-emerald-400 fill-emerald-400' : 'text-[#636366]'} />
+        <Zap size={11} className={mode !== 'off' ? 'text-white fill-white' : 'text-[#636366]'} />
         <span>{mode !== 'off' ? `Token Saver ~${percentage}%` : 'Token Saver: Off'}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 p-3.5 rounded-2xl bg-[#0c101a]/95 border border-white/[0.1] shadow-2xl z-50 text-[#f5f5f7] backdrop-blur-xl animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-72 p-3.5 rounded-2xl bg-[#18181b]/95 border border-white/[0.15] shadow-2xl z-50 text-[#f5f5f7] backdrop-blur-xl animate-fade-in">
           <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08]">
             <div className="flex items-center gap-1.5 font-medium text-xs">
-              <Zap size={14} className="text-emerald-400 fill-emerald-400" />
+              <Zap size={14} className="text-white fill-white" />
               <span>Token Efficiency Engine</span>
             </div>
             <button
@@ -53,9 +53,9 @@ export function TokenSaverBadge({ mode, stats, onOpenSettings, onResetStats }: T
             <div className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               <div>
                 <div className="text-[11px] text-[#86868b]">Active Mode</div>
-                <div className="font-semibold text-emerald-400 capitalize text-xs">{mode} (~{percentage}% target)</div>
+                <div className="font-semibold text-white capitalize text-xs">{mode} (~{percentage}% target)</div>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-mono">
+              <span className="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-mono">
                 ACTIVE
               </span>
             </div>
@@ -63,7 +63,7 @@ export function TokenSaverBadge({ mode, stats, onOpenSettings, onResetStats }: T
             <div className="grid grid-cols-2 gap-1.5">
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                 <span className="text-[#86868b] block text-[10px]">Tokens Saved</span>
-                <span className="text-sm font-mono font-semibold text-emerald-400">
+                <span className="text-sm font-mono font-semibold text-white">
                   {stats.totalTokensSaved.toLocaleString()}
                 </span>
                 <span className="text-[9.5px] text-[#636366] block">
@@ -80,7 +80,7 @@ export function TokenSaverBadge({ mode, stats, onOpenSettings, onResetStats }: T
             </div>
 
             <div className="p-2 rounded-xl bg-white/[0.03] text-[#86868b] text-[10.5px] leading-relaxed flex items-start gap-1.5">
-              <ShieldCheck size={14} className="text-blue-400 flex-none mt-0.5" />
+              <ShieldCheck size={14} className="text-white flex-none mt-0.5" />
               <span>
                 Smartly prunes sliding context, cleans whitespace, and optimizes prompts without losing nuance.
               </span>

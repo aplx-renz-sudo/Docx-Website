@@ -1,5 +1,18 @@
-## BIG BOI V2 PUSHED
+# VileDocx Web App.
+Official
 
-lil boi v3 coming soon btw (HAHA NO V2) (jk I'll push V3 fixed version)
+see a lil up and compare the files to see and use for yo OS lmao
 
-(ps, start. files are broken lmao, webapp version will fix it, V2 webapp coming a few days later)
+then clone ts fr
+
+ez use
+
+see yo start. type of files down here lmao
+
+mac- use the start.command (apple thingy)
+
+windows- use start.bat (big blue windows haha)
+
+linux- use start.sh (pengiun go brr)
+
+boom you have viledocx

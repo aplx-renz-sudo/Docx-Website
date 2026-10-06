@@ -2,7 +2,7 @@ import { AnthropicProvider } from './anthropic';
 import { GeminiProvider } from './gemini';
 import { OllamaProvider } from './ollama';
 import { OpenAICompatibleProvider } from './openai-compatible';
-import { OfflineNanoProvider } from './offline-nano';
+import { OfflineAtomProvider } from './offline-atom';
 import type { ProviderId } from './registry';
 import type { AIProvider } from './types';
 
@@ -17,7 +17,7 @@ export function createProvider(setup: ProviderSetup): AIProvider {
   const { provider, apiKey, model, baseUrl } = setup;
   switch (provider) {
     case 'offline':
-      return new OfflineNanoProvider(model);
+      return new OfflineAtomProvider(model);
     case 'gemini':
       return new GeminiProvider(apiKey, model);
     case 'openai':
@@ -68,8 +68,8 @@ export function createProvider(setup: ProviderSetup): AIProvider {
         model,
         baseUrl: baseUrl || 'https://openrouter.ai/api/v1',
         extraHeaders: {
-          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://aplx.web',
-          'X-Title': 'Aplx Web',
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://viledocx.web',
+          'X-Title': 'VileDocx Web',
         },
       });
     case 'ollama':

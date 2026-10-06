@@ -27,10 +27,10 @@ interface InteractiveTourGuideProps {
 export const TOUR_STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to Aplx',
+    title: 'Welcome to VileDocx',
     badge: 'STAGE 01 · ARCHITECTURE',
     icon: Gamepad2,
-    desc: 'Aplx is a private, client-first AI workspace. All conversations, credentials, and settings remain strictly stored in your browser.',
+    desc: 'VileDocx is a private, client-first AI workspace. All conversations, credentials, and settings remain strictly stored in your browser.',
     tips: [
       'Direct browser-to-provider routing with zero proxy intermediary.',
       'Instant local persistence across browser reloads.',
@@ -91,7 +91,7 @@ export const TOUR_STEPS = [
     title: 'Client-Side Security',
     badge: 'STAGE 06 · SECURITY',
     icon: Shield,
-    desc: 'Configure your API keys in Settings. Keys are never transmitted to any central Aplx server.',
+    desc: 'Configure your API keys in Settings. Keys are never transmitted to any central VileDocx server.',
     tips: [
       'Independent per-provider key vault in your browser.',
       'Press ⌘K or Ctrl+K for Prompt Library and ⌘/ for Shortcuts.',
@@ -151,7 +151,7 @@ export function InteractiveTourGuide({
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 600, letterSpacing: '0.06em', color: '#86868b' }}>
-              APLX INTERACTIVE GUIDE
+              VILEDOCX INTERACTIVE GUIDE
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Aplx Web — macOS launcher
-# Double-click this file in Finder to start Aplx in your default browser.
+# VileDocx Web — macOS launcher
+# Double-click this file in Finder to start VileDocx in your default browser.
 # (If macOS blocks it: right-click -> Open, or run once with: bash start.command)
 # ==============================================================================
 set -u
@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 echo ""
 echo " ============================================"
-echo "   Aplx Web - starting up..."
+echo "   VileDocx Web - starting up..."
 echo " ============================================"
 echo ""
 
@@ -55,7 +55,7 @@ fi
 
 # ---- Start server ----
 echo " [OK] Starting server..."
-npm run dev > aplx-server.log 2>&1 &
+npm run dev > viledocx-server.log 2>&1 &
 SERVER_PID=$!
 
 # Make sure the server dies when this window closes
@@ -76,7 +76,7 @@ while [ "$ATTEMPT" -lt 30 ]; do
 done
 
 if [ "$CODE" != "200" ]; then
-    echo " [X] Server did not start in time. See aplx-server.log for details."
+    echo " [X] Server did not start in time. See viledocx-server.log for details."
     read -r -p "Press Enter to close..."
     exit 1
 fi
@@ -88,7 +88,7 @@ open "http://localhost:3000"
 
 echo ""
 echo " ============================================"
-echo "   Aplx Web is running."
+echo "   VileDocx Web is running."
 echo "   Keep this window open."
 echo "   Press Ctrl+C to stop the server."
 echo " ============================================"

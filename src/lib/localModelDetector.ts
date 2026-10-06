@@ -16,7 +16,7 @@ export type LocalDetectionResult = {
   detectedAt?: number;
 };
 
-const CACHE_KEY = 'aplx:detected_local_models:v1';
+const CACHE_KEY = 'viledocx:detected_local_models:v1';
 
 export async function detectLocalOfflineModels(customOllamaUrl?: string): Promise<LocalDetectionResult> {
   const ollamaUrl = (customOllamaUrl || 'http://localhost:11434').replace(/\/$/, '');

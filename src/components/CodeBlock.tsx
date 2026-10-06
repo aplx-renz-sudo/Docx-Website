@@ -41,14 +41,14 @@ export function CodeBlock({ language, code, label }: CodeBlockProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `aplx-${Date.now()}.${ext}`;
+    a.download = `viledocx-${Date.now()}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="code-block-container my-3.5 rounded-xl overflow-hidden border border-white/[0.08] bg-[#070a10] shadow-xl">
-      <div className="code-block-header flex items-center justify-between px-3.5 py-2 bg-white/[0.03] border-b border-white/[0.06] text-xs font-mono text-[#86868b]">
+    <div className="code-block-container my-3.5 rounded-xl overflow-hidden border border-white/[0.1] bg-[#171717] shadow-xl">
+      <div className="code-block-header flex items-center justify-between px-3.5 py-2 bg-[#2f2f2f] border-b border-white/[0.06] text-xs font-mono text-[#b4b4b4]">
         <div className="flex items-center gap-2">
           {/* macOS window indicator dots */}
           <div className="flex items-center gap-1.5 mr-1.5">
@@ -67,7 +67,7 @@ export function CodeBlock({ language, code, label }: CodeBlockProps) {
             type="button"
             onClick={() => setWrap(!wrap)}
             title="Toggle word wrap"
-            className={`p-1 rounded-md hover:bg-white/[0.08] transition-colors ${wrap ? 'text-[#2997ff]' : 'text-[#86868b]'}`}
+            className={`p-1 rounded-md hover:bg-white/[0.08] transition-colors ${wrap ? 'text-white' : 'text-[#86868b]'}`}
           >
             <WrapText size={13} />
           </button>
@@ -85,14 +85,14 @@ export function CodeBlock({ language, code, label }: CodeBlockProps) {
             title="Copy code"
             className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-white/[0.06] hover:bg-white/[0.1] text-[#f5f5f7] border border-white/[0.08] transition-colors cursor-pointer"
           >
-            {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+            {copied ? <Check size={12} className="text-white" /> : <Copy size={12} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
       </div>
 
       <pre
-        className={`p-4 m-0 font-mono text-xs leading-relaxed text-[#e5e5ea] overflow-x-auto selection:bg-[#2997ff33] ${
+        className={`p-4 m-0 font-mono text-xs leading-relaxed text-[#e5e5ea] overflow-x-auto selection:bg-white/20 ${
           wrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'
         }`}
       >

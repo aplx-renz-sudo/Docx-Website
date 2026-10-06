@@ -26,17 +26,32 @@ import {
   ChevronLeft,
   ChevronRight,
   Terminal,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from 'lucide-react';
 import { createProvider } from '../providers';
 import type { ProviderConfig } from '../lib/credential';
+import type { Preferences } from '../types';
+import {
+  WORKER_SPECS,
+  WORKERS_LIST,
+  executeWorkerSwarm,
+  type SwarmThought,
+  type WorkerRole,
+} from '../lib/workerSwarm';
 import { CodeBlock } from './CodeBlock';
+import { SwarmMetricsHeaderWidget } from './SwarmMetricsHeaderWidget';
 import { checkAntiDDoS, sanitizeInputPayload } from '../lib/securityGuard';
 import { isApiLimitError, triggerApiLimitModal } from '../lib/apiLimitHandler';
 
 interface BuildModeViewProps {
   providerConfig: ProviderConfig;
   onLeave: () => void;
-  onOpenSettings: () => void;
+  onOpenSettings: (tab?: string) => void;
+  preferences?: Preferences;
+  onUpdatePreferences?: (preferences: Preferences) => void;
 }
 
 export interface BuildMessage {
@@ -47,6 +62,9 @@ export interface BuildMessage {
   timestamp: number;
   bloatRemoved?: number;
   detectedLang?: string;
+  swarmThoughts?: SwarmThought[];
+  decidingBot?: string;
+  usedFallback?: boolean;
 }
 
 export interface BuildSession {
@@ -65,9 +83,9 @@ interface BloatFilters {
   compactComments: boolean;
 }
 
-const STORAGE_WARNING_KEY = 'aplx:build_mode_accepted';
-const STORAGE_BUILD_SESSIONS = 'aplx:build_mode_sessions';
-const STORAGE_ACTIVE_SESSION_ID = 'aplx:build_active_session_id';
+const STORAGE_WARNING_KEY = 'viledocx:build_mode_accepted';
+const STORAGE_BUILD_SESSIONS = 'viledocx:build_mode_sessions';
+const STORAGE_ACTIVE_SESSION_ID = 'viledocx:build_active_session_id';
 
 // Pre-packaged build task templates
 const BUILD_TEMPLATES = [
@@ -99,7 +117,7 @@ const BUILD_TEMPLATES = [
 
 function loadBuildSessions(): BuildSession[] {
   try {
-    const raw = localStorage.getItem(STORAGE_BUILD_SESSIONS);
+    const raw = localStorage.getItem(STORAGE_BUILD_SESSIONS) || localStorage.getItem('aplx:build_mode_sessions');
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -133,21 +151,38 @@ function formatTimeAgo(timestamp: number): string {
   return `${days}d ago`;
 }
 
-export function BuildModeView({ providerConfig, onLeave, onOpenSettings }: BuildModeViewProps) {
+export function BuildModeView({
+  providerConfig,
+  onLeave,
+  onOpenSettings,
+  preferences,
+  onUpdatePreferences,
+}: BuildModeViewProps) {
   // Check if warning has been accepted
   const [warningAccepted, setWarningAccepted] = useState<boolean>(() => {
     try {
-      return localStorage.getItem(STORAGE_WARNING_KEY) === 'true';
+      return (
+        localStorage.getItem(STORAGE_WARNING_KEY) === 'true' ||
+        localStorage.getItem('aplx:build_mode_accepted') === 'true'
+      );
     } catch {
       return false;
     }
   });
 
+  // Multiple Workers Swarm State (Alpha Testing)
+  const isSwarmEnabled = preferences?.multipleWorkers?.enabled ?? true;
+  const [currentSwarmThoughts, setCurrentSwarmThoughts] = useState<SwarmThought[]>([]);
+  const [activeWorkerId, setActiveWorkerId] = useState<WorkerRole | null>(null);
+  const [swarmFallbackEngaged, setSwarmFallbackEngaged] = useState(false);
+  const [showLiveSwarmHUD, setShowLiveSwarmHUD] = useState(true);
+  const [expandedThoughtMsgId, setExpandedThoughtMsgId] = useState<string | null>(null);
+
   // Dedicated Build Mode Chat History
   const [sessions, setSessions] = useState<BuildSession[]>(() => loadBuildSessions());
   const [activeSessionId, setActiveSessionId] = useState<string>(() => {
     try {
-      return localStorage.getItem(STORAGE_ACTIVE_SESSION_ID) || '';
+      return localStorage.getItem(STORAGE_ACTIVE_SESSION_ID) || localStorage.getItem('aplx:build_active_session_id') || '';
     } catch {
       return '';
     }
@@ -387,12 +422,95 @@ export function BuildModeView({ providerConfig, onLeave, onOpenSettings }: Build
     setPrompt('');
     setBuilding(true);
     setStreamingModelText('');
+    setCurrentSwarmThoughts([]);
+    setActiveWorkerId(null);
+    setSwarmFallbackEngaged(false);
     stopRef.current = false;
 
-    // Build system instructions with strict anti-bloat filters
+    // Gather history turns specifically for this build session
+    const buildHistory = targetSession.messages
+      .slice(0, -1) // exclude the just-added user message
+      .map(m => ({ role: m.role, content: m.content }));
+
+    let accumulatedRaw = '';
+
+    // ==========================================
+    // MULTIPLE WORKERS FEATURE (ALPHA TESTING)
+    // 6 Autonomous Workers + WATCHMAN Supreme Arbiter
+    // ==========================================
+    if (isSwarmEnabled) {
+      try {
+        const swarmResult = await executeWorkerSwarm({
+          prompt: textToBuild,
+          history: buildHistory,
+          providerConfig,
+          multipleWorkersConfig: preferences?.multipleWorkers,
+          onThought: thought => {
+            setCurrentSwarmThoughts(prev => [...prev, thought]);
+            setActiveWorkerId(thought.workerId);
+            if (thought.status === 'fallback') {
+              setSwarmFallbackEngaged(true);
+            }
+          },
+          onCodeChunk: (chunk: string) => {
+            if (!stopRef.current) {
+              accumulatedRaw += chunk;
+              const { clean, removedCount } = applyAntiBloat(accumulatedRaw);
+              setStreamingModelText(clean);
+              setBloatRemovedChars(prev => prev + removedCount);
+            }
+          },
+          isCancelled: () => stopRef.current,
+        });
+
+        // Finalize and save assistant message to Build Chat History
+        const { clean, removedCount } = applyAntiBloat(accumulatedRaw || swarmResult.finalCode);
+        const assistantMessage: BuildMessage = {
+          id: assistantMessageId,
+          role: 'model',
+          content: clean || accumulatedRaw || swarmResult.finalCode,
+          rawContent: accumulatedRaw || swarmResult.finalCode,
+          timestamp: Date.now(),
+          bloatRemoved: removedCount,
+          detectedLang: lang,
+          swarmThoughts: swarmResult.thoughts,
+          decidingBot: 'WATCHMAN',
+          usedFallback: swarmResult.usedFallback,
+        };
+
+        setSessions(prev => {
+          const finished = prev.map(s => {
+            if (s.id === targetSession!.id) {
+              return {
+                ...s,
+                updatedAt: Date.now(),
+                messages: [...s.messages, assistantMessage],
+              };
+            }
+            return s;
+          });
+          saveBuildSessions(finished);
+          return finished;
+        });
+      } catch (err: unknown) {
+        if (isApiLimitError(err)) {
+          triggerApiLimitModal({
+            providerName: 'WATCHMAN / Swarm Engine',
+            details: err instanceof Error ? err.message : 'API rate limit or quota exceeded during code generation.',
+          });
+        }
+        console.error('Swarm execution failed:', err);
+      } finally {
+        setBuilding(false);
+        setActiveWorkerId(null);
+      }
+      return;
+    }
+
+    // Direct single model generation (when Multiple Workers Swarm is toggled off)
     const systemPrompt = antiBloatActive
-      ? `[SYSTEM DIRECTIVE: APLX BUILD MODE - STRICT ANTI-BLOAT FILTER ACTIVE]
-You are Aplx Build Mode, a specialized engineering and software development engine.
+      ? `[SYSTEM DIRECTIVE: DOCX BUILD MODE - STRICT ANTI-BLOAT FILTER ACTIVE]
+You are Docx Build Mode, a specialized engineering and software development engine.
 YOUR PRIME OBJECTIVE IS TO DELIVER DIRECT, PRODUCTION-READY, FULLY FUNCTIONAL CODE.
 
 STRICT BLOAT RESTRICTIONS:
@@ -401,15 +519,8 @@ STRICT BLOAT RESTRICTIONS:
 3. DIRECT CODE PRIORITY: Deliver complete, self-contained, typed code blocks with syntax language specifiers.
 4. MINIMAL CONCISE COMMENTS: Keep commentary strictly focused on essential type signatures or architectural invariants.
 5. NO REDUNDANT PROSE: Skip all marketing or descriptive fluff.`
-      : `[SYSTEM DIRECTIVE: APLX BUILD MODE]
-You are Aplx Build Mode. Output clean, functional code for the requested feature.`;
-
-    // Gather history turns specifically for this build session
-    const buildHistory = targetSession.messages
-      .slice(0, -1) // exclude the just-added user message
-      .map(m => ({ role: m.role, content: m.content }));
-
-    let accumulatedRaw = '';
+      : `[SYSTEM DIRECTIVE: DOCX BUILD MODE]
+You are Docx Build Mode. Output clean, functional code for the requested feature.`;
 
     try {
       const provider = createProvider({
@@ -535,13 +646,13 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
   );
 
   return (
-    <div className="min-h-screen bg-[#06090f] text-[#e2e8f0] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#000000] text-zinc-100 flex flex-col font-sans selection:bg-white/20 selection:text-white">
       {/* Build Mode Top Header */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#090d16]/95 backdrop-blur-xl border-b border-[#1c273c] shadow-lg shadow-black/40">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/60">
         <div className="flex items-center gap-3">
           <button
             onClick={onLeave}
-            className="playful-pop p-2 rounded-xl text-[#7f91b3] hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+            className="playful-pop p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
             title="Leave Build Mode and return to chat"
           >
             <ArrowLeft size={16} />
@@ -551,19 +662,19 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
           <div className="h-5 w-px bg-white/[0.1] mx-1" />
 
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm shadow-amber-950/40 flex-none">
-              <Hammer size={17} className="animate-pulse" />
+            <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-bold shadow-md shadow-white/10 flex-none">
+              <Hammer size={16} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-white tracking-tight leading-none">
-                  Build Mode, Aplx
+                  Docx Build Mode
                 </h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20">
                   Studio
                 </span>
               </div>
-              <p className="text-[11px] text-[#7182a3] hidden sm:block">
+              <p className="text-[11px] text-zinc-400 hidden sm:block">
                 Dedicated code generation with isolated build history
               </p>
             </div>
@@ -577,15 +688,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
             onClick={() => setShowHistorySidebar(prev => !prev)}
             className={`playful-pop px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 ${
               showHistorySidebar
-                ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                : 'bg-white/[0.05] hover:bg-white/[0.08] border-white/[0.1] text-[#cad7f2]'
+                ? 'bg-white/15 border-white/30 text-white'
+                : 'bg-white/[0.05] hover:bg-white/[0.08] border-white/[0.1] text-zinc-300'
             }`}
             title="Toggle Build Mode Chat History"
           >
-            <History size={14} className="text-amber-400" />
+            <History size={14} className="text-white" />
             <span>Chat History</span>
             {sessions.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500/30 text-amber-200">
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-white text-black">
                 {sessions.length}
               </span>
             )}
@@ -602,24 +713,46 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
             <span className="hidden md:inline">New Build</span>
           </button>
 
+          {/* Swarm Live Telemetry & Worker Response Dashboard Widget */}
+          <SwarmMetricsHeaderWidget
+            providerConfig={providerConfig}
+            preferences={preferences}
+            onUpdatePreferences={onUpdatePreferences ? updater => {
+              if (preferences) {
+                onUpdatePreferences(updater(preferences));
+              }
+            } : undefined}
+            onOpenSettings={() => onOpenSettings('workers')}
+          />
+
           {/* Active Model Indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[#9fb3d9]">
-            <Cpu size={13} className="text-amber-400" />
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-300">
+            <Cpu size={13} className="text-white" />
             <span className="font-mono text-[11px]">{providerConfig.model}</span>
           </div>
 
           <button
-            onClick={onOpenSettings}
-            className="playful-pop px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.1] text-xs font-medium text-[#cad7f2] transition-colors cursor-pointer flex items-center gap-1.5"
+            onClick={() => onOpenSettings('provider')}
+            className="playful-pop px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.1] text-xs font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
             title="Configure API provider and keys"
           >
             <SlidersHorizontal size={13} />
             <span className="hidden sm:inline">API</span>
           </button>
 
+          <a
+            href="https://docx.freebuff.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="playful-pop px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+            title="Go back to landing page (https://docx.freebuff.app)"
+          >
+            <span>Landing page -&gt;</span>
+          </a>
+
           <button
             onClick={onLeave}
-            className="playful-pop px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition-colors cursor-pointer"
+            className="playful-pop px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             Leave
           </button>
@@ -630,10 +763,10 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
       <div className="flex-1 flex overflow-hidden">
         {/* BUILD MODE CHAT HISTORY SIDEBAR / DRAWER */}
         {showHistorySidebar && (
-          <aside className="w-72 sm:w-80 flex-none bg-[#070b14] border-r border-[#1a2538] flex flex-col z-20 shadow-2xl transition-all">
-            <div className="p-3.5 border-b border-[#162032] flex items-center justify-between">
+          <aside className="w-72 sm:w-80 flex-none bg-[#0a0a0a] border-r border-white/10 flex flex-col z-20 shadow-2xl transition-all">
+            <div className="p-3.5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <History size={15} className="text-amber-400" />
+                <History size={15} className="text-white" />
                 <span className="text-xs font-bold text-white uppercase tracking-wider">
                   Build Chat History
                 </span>
@@ -642,7 +775,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 <button
                   type="button"
                   onClick={handleCreateNewSession}
-                  className="playful-pop p-1.5 rounded-lg text-[#7b8da8] hover:text-white hover:bg-white/[0.06] transition-colors"
+                  className="playful-pop p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors"
                   title="New Build Chat"
                 >
                   <Plus size={15} />
@@ -650,7 +783,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 <button
                   type="button"
                   onClick={() => setShowHistorySidebar(false)}
-                  className="playful-pop p-1.5 rounded-lg text-[#7b8da8] hover:text-white hover:bg-white/[0.06] transition-colors"
+                  className="playful-pop p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors"
                   title="Close History Sidebar"
                 >
                   <ChevronLeft size={16} />
@@ -659,15 +792,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
             </div>
 
             {/* Search within Build Chat History */}
-            <div className="p-3 border-b border-[#162032]">
+            <div className="p-3 border-b border-white/10">
               <div className="relative">
-                <Search size={13} className="absolute left-3 top-2.5 text-[#5e718f]" />
+                <Search size={13} className="absolute left-3 top-2.5 text-zinc-500" />
                 <input
                   type="text"
                   placeholder="Search build chats…"
                   value={historySearch}
                   onChange={e => setHistorySearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#0c1220] border border-[#1d293d] text-xs text-[#e1eafc] placeholder-[#5e718f] outline-none focus:border-amber-500/60 transition-all font-sans"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#141414] border border-white/15 text-xs text-white placeholder-zinc-500 outline-none focus:border-white/40 transition-all font-sans"
                 />
               </div>
             </div>
@@ -676,15 +809,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {filteredSessions.length === 0 ? (
                 <div className="py-10 px-4 text-center">
-                  <Terminal size={24} className="mx-auto text-[#405270] mb-2" />
-                  <p className="text-xs font-semibold text-[#7d91b3]">No build chats yet</p>
-                  <p className="text-[11px] text-[#556682] mt-1">
+                  <Terminal size={24} className="mx-auto text-zinc-600 mb-2" />
+                  <p className="text-xs font-semibold text-zinc-300">No build chats yet</p>
+                  <p className="text-[11px] text-zinc-500 mt-1">
                     Your code requests and build turns will be safely saved here.
                   </p>
                   <button
                     type="button"
                     onClick={handleCreateNewSession}
-                    className="playful-pop mt-3 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold"
+                    className="playful-pop mt-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold"
                   >
                     Start First Build
                   </button>
@@ -704,8 +837,8 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                       }}
                       className={`group relative p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
                         isActive
-                          ? 'bg-amber-500/10 border-amber-500/40 text-white shadow-sm'
-                          : 'bg-white/[0.02] hover:bg-white/[0.05] border-transparent hover:border-white/[0.08] text-[#9bb0d4]'
+                          ? 'bg-white/10 border-white/25 text-white shadow-sm'
+                          : 'bg-white/[0.02] hover:bg-white/[0.06] border-transparent hover:border-white/[0.08] text-zinc-400'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -721,19 +854,19 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                                   if (e.key === 'Escape') setEditingSessionId(null);
                                 }}
                                 autoFocus
-                                className="w-full px-2 py-0.5 rounded bg-black/60 border border-amber-500/50 text-xs text-white outline-none"
+                                className="w-full px-2 py-0.5 rounded bg-black border border-white/30 text-xs text-white outline-none"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleSaveRename(session.id)}
-                                className="p-1 text-emerald-400 hover:text-emerald-300"
+                                className="p-1 text-white hover:text-zinc-200"
                               >
                                 <Check size={12} />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingSessionId(null)}
-                                className="p-1 text-rose-400 hover:text-rose-300"
+                                className="p-1 text-zinc-400 hover:text-white"
                               >
                                 <X size={12} />
                               </button>
@@ -742,7 +875,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                             <div className="flex items-center gap-1.5">
                               <MessageSquare
                                 size={13}
-                                className={isActive ? 'text-amber-400 flex-none' : 'text-[#586b88] flex-none'}
+                                className={isActive ? 'text-white flex-none' : 'text-zinc-500 flex-none'}
                               />
                               <span className="text-xs font-semibold truncate block">
                                 {session.title}
@@ -750,7 +883,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                             </div>
                           )}
 
-                          <div className="flex items-center gap-2 text-[10px] text-[#697d9e] mt-1">
+                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-1">
                             <span>{formatTimeAgo(session.updatedAt)}</span>
                             <span>•</span>
                             <span>{messageCount} {messageCount === 1 ? 'turn' : 'turns'}</span>
@@ -767,7 +900,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                                 setEditingSessionId(session.id);
                                 setEditingTitle(session.title);
                               }}
-                              className="p-1 text-[#6e82a3] hover:text-white rounded"
+                              className="p-1 text-zinc-400 hover:text-white rounded"
                               title="Rename"
                             >
                               <Pencil size={11} />
@@ -775,7 +908,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                             <button
                               type="button"
                               onClick={e => handleDeleteSession(session.id, e)}
-                              className="p-1 text-[#6e82a3] hover:text-rose-400 rounded"
+                              className="p-1 text-zinc-400 hover:text-rose-400 rounded"
                               title="Delete"
                             >
                               <Trash2 size={11} />
@@ -791,16 +924,16 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
 
             {/* Clear All Build History Button */}
             {sessions.length > 0 && (
-              <div className="p-3 border-t border-[#162032] flex items-center justify-between">
+              <div className="p-3 border-t border-white/10 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handleClearAllHistory}
-                  className="text-[11px] text-[#6e82a3] hover:text-rose-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="text-[11px] text-zinc-400 hover:text-rose-400 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 size={12} />
                   <span>Clear Build History</span>
                 </button>
-                <span className="text-[10px] font-mono text-[#526482]">
+                <span className="text-[10px] font-mono text-zinc-500">
                   {sessions.length} saved
                 </span>
               </div>
@@ -810,35 +943,35 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
 
         {/* WORKSPACE CENTER CONTENT */}
         <main className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-6 space-y-5">
-          {/* FIRST-TIME WARNING IN YELLOW BOX */}
+          {/* FIRST-TIME WARNING IN BLACK BOX */}
           {!warningAccepted && (
-            <div className="rounded-2xl bg-amber-500/10 border-2 border-amber-500/80 p-5 sm:p-6 shadow-2xl shadow-amber-950/40 backdrop-blur-xl animate-fade-in">
+            <div className="rounded-2xl bg-[#0d0d0d] border border-white/15 p-5 sm:p-6 shadow-2xl backdrop-blur-xl animate-fade-in">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-none mt-0.5">
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white flex-none mt-0.5">
                   <AlertTriangle size={22} />
                 </div>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <h3 className="text-base font-bold text-amber-300 tracking-tight">
+                    <h3 className="text-base font-bold text-white tracking-tight">
                       Build Mode Notice
                     </h3>
-                    <p className="text-sm font-medium text-amber-200/90 mt-1 leading-relaxed">
+                    <p className="text-sm font-medium text-zinc-300 mt-1 leading-relaxed">
                       API tokens consumption will increase since you are in build mode, would you like to continue?
                     </p>
                   </div>
                   <div className="flex items-center gap-3 pt-1 flex-wrap">
                     <button
                       onClick={handleAcceptWarning}
-                      className="playful-pop px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs tracking-wide shadow-md shadow-amber-950/40 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                      className="playful-pop px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold text-xs tracking-wide shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                     >
                       <Check size={15} />
                       <span>Yes, i want to continue</span>
                     </button>
                     <button
                       onClick={onLeave}
-                      className="playful-pop px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white/90 font-medium text-xs transition-colors cursor-pointer"
+                      className="playful-pop px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white/90 font-medium text-xs transition-colors cursor-pointer active:scale-95"
                     >
-                      leave
+                      Leave
                     </button>
                   </div>
                 </div>
@@ -847,10 +980,10 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
           )}
 
           {/* ANTI-BLOAT FILTERS BAR */}
-          <section className="rounded-2xl bg-[#0a0f1c] border border-[#1b263b] p-4 shadow-lg shadow-black/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#162135]">
+          <section className="rounded-2xl bg-[#0d0d0d] border border-white/10 p-4 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-none">
+                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white flex-none">
                   <ShieldCheck size={16} />
                 </div>
                 <div>
@@ -859,16 +992,16 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                       Anti-Bloat Engine
                     </h3>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
                         antiBloatActive
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-white/[0.06] text-[#7182a3]'
+                          ? 'bg-white/10 text-white border border-white/20'
+                          : 'bg-white/[0.06] text-zinc-400'
                       }`}
                     >
                       {antiBloatActive ? 'Active' : 'Disabled'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#7c8ea8]">
+                  <p className="text-[11px] text-zinc-400">
                     Filters out conversational filler, pleasantries, and unnecessary token overhead
                   </p>
                 </div>
@@ -876,8 +1009,8 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
 
               <div className="flex items-center gap-3">
                 {bloatRemovedChars > 0 && (
-                  <span className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
-                    <Zap size={11} className="text-emerald-400" />
+                  <span className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white flex items-center gap-1">
+                    <Zap size={11} className="text-white" />
                     <span>{bloatRemovedChars} bloat chars pruned</span>
                   </span>
                 )}
@@ -887,8 +1020,8 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                   onClick={() => setAntiBloatActive(prev => !prev)}
                   className={`playful-pop px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                     antiBloatActive
-                      ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/[0.05] border border-white/[0.1] text-[#8ea0c2]'
+                      ? 'bg-white/15 border border-white/30 text-white'
+                      : 'bg-white/[0.05] border border-white/[0.1] text-zinc-400'
                   }`}
                 >
                   {antiBloatActive ? 'Filter Enabled' : 'Enable Anti-Bloat'}
@@ -903,15 +1036,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 onClick={() => setFilters(f => ({ ...f, stripFluff: !f.stripFluff }))}
                 className={`playful-pop text-left p-2.5 rounded-xl border text-xs transition-all ${
                   filters.stripFluff && antiBloatActive
-                    ? 'bg-[#101a2e] border-emerald-500/30 text-white'
-                    : 'bg-white/[0.02] border-white/[0.05] text-[#6b7c99]'
+                    ? 'bg-white/10 border-white/25 text-white'
+                    : 'bg-white/[0.02] border-white/[0.05] text-zinc-400'
                 }`}
               >
                 <div className="font-semibold text-[11px] flex items-center justify-between">
                   <span>🚫 Strip Fluff</span>
-                  {filters.stripFluff && antiBloatActive && <Check size={12} className="text-emerald-400" />}
+                  {filters.stripFluff && antiBloatActive && <Check size={12} className="text-white" />}
                 </div>
-                <span className="text-[10px] text-[#7687a4] block mt-0.5">
+                <span className="text-[10px] text-zinc-400 block mt-0.5">
                   No greetings or sign-offs
                 </span>
               </button>
@@ -921,15 +1054,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 onClick={() => setFilters(f => ({ ...f, codeOnly: !f.codeOnly }))}
                 className={`playful-pop text-left p-2.5 rounded-xl border text-xs transition-all ${
                   filters.codeOnly && antiBloatActive
-                    ? 'bg-[#101a2e] border-emerald-500/30 text-white'
-                    : 'bg-white/[0.02] border-white/[0.05] text-[#6b7c99]'
+                    ? 'bg-white/10 border-white/25 text-white'
+                    : 'bg-white/[0.02] border-white/[0.05] text-zinc-400'
                 }`}
               >
                 <div className="font-semibold text-[11px] flex items-center justify-between">
                   <span>⚡ Pure Code</span>
-                  {filters.codeOnly && antiBloatActive && <Check size={12} className="text-emerald-400" />}
+                  {filters.codeOnly && antiBloatActive && <Check size={12} className="text-white" />}
                 </div>
-                <span className="text-[10px] text-[#7687a4] block mt-0.5">
+                <span className="text-[10px] text-zinc-400 block mt-0.5">
                   Direct file-ready syntax
                 </span>
               </button>
@@ -939,15 +1072,15 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 onClick={() => setFilters(f => ({ ...f, pruneBoilerplate: !f.pruneBoilerplate }))}
                 className={`playful-pop text-left p-2.5 rounded-xl border text-xs transition-all ${
                   filters.pruneBoilerplate && antiBloatActive
-                    ? 'bg-[#101a2e] border-emerald-500/30 text-white'
-                    : 'bg-white/[0.02] border-white/[0.05] text-[#6b7c99]'
+                    ? 'bg-white/10 border-white/25 text-white'
+                    : 'bg-white/[0.02] border-white/[0.05] text-zinc-400'
                 }`}
               >
                 <div className="font-semibold text-[11px] flex items-center justify-between">
                   <span>✂️ Prune Redundancy</span>
-                  {filters.pruneBoilerplate && antiBloatActive && <Check size={12} className="text-emerald-400" />}
+                  {filters.pruneBoilerplate && antiBloatActive && <Check size={12} className="text-white" />}
                 </div>
-                <span className="text-[10px] text-[#7687a4] block mt-0.5">
+                <span className="text-[10px] text-zinc-400 block mt-0.5">
                   Tight token whitespace
                 </span>
               </button>
@@ -957,20 +1090,207 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 onClick={() => setFilters(f => ({ ...f, compactComments: !f.compactComments }))}
                 className={`playful-pop text-left p-2.5 rounded-xl border text-xs transition-all ${
                   filters.compactComments && antiBloatActive
-                    ? 'bg-[#101a2e] border-emerald-500/30 text-white'
-                    : 'bg-white/[0.02] border-white/[0.05] text-[#6b7c99]'
+                    ? 'bg-white/10 border-white/25 text-white'
+                    : 'bg-white/[0.02] border-white/[0.05] text-zinc-400'
                 }`}
               >
                 <div className="font-semibold text-[11px] flex items-center justify-between">
                   <span>🎯 Compact Comments</span>
-                  {filters.compactComments && antiBloatActive && <Check size={12} className="text-emerald-400" />}
+                  {filters.compactComments && antiBloatActive && <Check size={12} className="text-white" />}
                 </div>
-                <span className="text-[10px] text-[#7687a4] block mt-0.5">
+                <span className="text-[10px] text-zinc-400 block mt-0.5">
                   Strict docstrings only
                 </span>
               </button>
             </div>
           </section>
+
+          {/* ======================================================== */}
+          {/* MULTIPLE WORKERS SWARM HUD (ALPHA TESTING)               */}
+          {/* 6 Autonomous Workers + WATCHMAN Supreme Arbiter & Decider */}
+          {/* ======================================================== */}
+          {isSwarmEnabled && (
+            <section className="rounded-2xl bg-[#0d0d0d] border border-white/15 p-4 sm:p-5 shadow-2xl shadow-black/50 relative overflow-hidden animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10 relative z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white flex-none shadow-sm">
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
+                        6-Worker Swarm & WATCHMAN Arbiter
+                      </h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20">
+                        Alpha Testing
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-zinc-300 border border-white/10">
+                        {preferences?.multipleWorkers?.apiMode === 'dedicated'
+                          ? 'Dedicated Bot Keys'
+                          : 'Single API · 30m-1hr Variant Mode'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400">
+                      Autonomous bots actively debating, cross-critiquing and reporting directly to the supreme WATCHMAN arbiter bot
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowLiveSwarmHUD(prev => !prev)}
+                    className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.09] text-[11px] font-mono text-zinc-300 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    {showLiveSwarmHUD ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    <span>{showLiveSwarmHUD ? 'Collapse' : 'Expand'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSettings('workers')}
+                    className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-[11px] font-mono text-white flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Configure Swarm in Settings"
+                  >
+                    <SlidersHorizontal size={12} />
+                    <span>Config</span>
+                  </button>
+                </div>
+              </div>
+
+              {showLiveSwarmHUD && (
+                <div className="pt-3 space-y-3 relative z-10">
+                  {/* The 6 Workers Nodes Row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {WORKERS_LIST.map(worker => {
+                      const isActive = activeWorkerId === worker.id;
+                      const hasDeliberated = currentSwarmThoughts.some(t => t.workerId === worker.id);
+                      return (
+                        <div
+                          key={worker.id}
+                          className={`p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
+                            isActive
+                              ? 'border-white/40 bg-white/10 text-white shadow-md scale-[1.02]'
+                              : hasDeliberated
+                              ? 'border-white/20 bg-white/[0.05] text-white'
+                              : 'border-white/[0.06] bg-white/[0.02] text-zinc-500'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold font-mono text-[10px] text-white">
+                              W{worker.number}
+                            </span>
+                            {isActive ? (
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            ) : hasDeliberated ? (
+                              <Check size={11} className="text-white" />
+                            ) : (
+                              <span className="text-[9px] text-zinc-500">standby</span>
+                            )}
+                          </div>
+                          <span className="font-semibold text-[11px] truncate block text-white">
+                            {worker.name.replace(/^Worker \d+: /, '')}
+                          </span>
+                          <span className="text-[9px] text-zinc-400 truncate block mt-0.5">
+                            {worker.role.split('&')[0]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* WATCHMAN Status Card */}
+                  <div
+                    className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all ${
+                      activeWorkerId === 'watchman' || swarmFallbackEngaged
+                        ? 'bg-white/10 border-white/30 text-white shadow-md'
+                        : 'bg-[#141414] border-white/15 text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white flex-none">
+                        <Terminal size={14} className={activeWorkerId === 'watchman' ? 'animate-pulse' : ''} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-xs text-white font-mono">
+                            WATCHMAN (Chief Arbiter & Supreme Decider)
+                          </span>
+                          <span className="px-2 py-0.2 rounded text-[9px] font-bold font-mono uppercase bg-white text-black">
+                            Last Fallback Bot
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-zinc-300 block">
+                          {swarmFallbackEngaged
+                            ? '🚨 Emergency Fallback Active: WATCHMAN generating direct code to bypass worker anomaly.'
+                            : activeWorkerId === 'watchman'
+                            ? '👑 WATCHMAN arbitrating all 6 workers and generating definitive code...'
+                            : building
+                            ? 'Supervising 6 workers in deliberation...'
+                            : 'Standing ready to arbitrate and decide final output.'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Live Swarm Inter-Bot Dialogue Stream */}
+                  {currentSwarmThoughts.length > 0 && (
+                    <div className="p-3.5 rounded-xl bg-[#050505] border border-white/10 space-y-2.5 max-h-64 overflow-y-auto font-mono text-xs">
+                      <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1.5 border-b border-white/[0.08] flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                          <span className="text-white font-semibold">Live Inter-Bot Conversation Stream</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-zinc-300 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                            Per-Bot Context Limit: 250t
+                          </span>
+                          <span className="text-zinc-400">{currentSwarmThoughts.length}/7 bots responded</span>
+                        </div>
+                      </div>
+                      {currentSwarmThoughts.map(t => {
+                        const spec = WORKER_SPECS[t.workerId];
+                        const isWatchman = t.workerId === 'watchman';
+                        return (
+                          <div
+                            key={t.id}
+                            className={`p-2.5 rounded-xl border transition-all ${
+                              isWatchman
+                                ? 'bg-white/10 border-white/30 text-white'
+                                : 'bg-[#121212] border-white/10 text-zinc-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black bg-white"
+                                >
+                                  {isWatchman ? '👑' : `W${spec.number}`}
+                                </span>
+                                <span className="font-bold text-[10px] text-white">
+                                  {spec.name}
+                                </span>
+                                <span className="text-[9px] text-zinc-400">
+                                  ➔ <strong className="text-white">@{t.recipient || spec.recipient}</strong>
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[9px]">
+                                {t.modelUsed && (
+                                  <span className="px-1.5 py-0.2 rounded bg-white/10 text-zinc-300 font-mono">
+                                    {t.modelUsed}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-zinc-300 leading-relaxed font-sans pl-5.5">{t.thought}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* CHRONOLOGICAL BUILD CHAT MESSAGES IN THIS SESSION */}
           {activeSession && activeSession.messages.length > 0 && (
@@ -979,9 +1299,9 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                 <div key={msg.id} className="space-y-2">
                   {msg.role === 'user' ? (
                     <div className="flex items-start gap-3 justify-end">
-                      <div className="max-w-2xl bg-[#11192b] border border-[#233554] p-3.5 rounded-2xl text-sm text-[#f1f5f9] shadow-md font-mono">
-                        <div className="flex items-center gap-2 mb-1 text-[11px] text-[#7388aa]">
-                          <Code2 size={12} className="text-amber-400" />
+                      <div className="max-w-2xl bg-[#141414] border border-white/15 p-3.5 rounded-2xl text-sm text-white shadow-md font-mono">
+                        <div className="flex items-center gap-2 mb-1 text-[11px] text-zinc-400">
+                          <Code2 size={12} className="text-white" />
                           <span className="font-semibold text-white">Build Request</span>
                           <span className="text-[10px]">({formatTimeAgo(msg.timestamp)})</span>
                         </div>
@@ -989,15 +1309,46 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl bg-[#070b14] border border-[#1b263b] overflow-hidden shadow-2xl shadow-black/40 flex flex-col">
-                      <div className="flex items-center justify-between px-4 py-2 bg-[#090e1a] border-b border-[#172236] text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <div className="rounded-2xl bg-[#0d0d0d] border border-white/15 overflow-hidden shadow-2xl shadow-black/50 flex flex-col">
+                      <div className="flex items-center justify-between px-4 py-2 bg-[#121212] border-b border-white/10 text-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                           <span className="font-semibold text-white text-xs">
                             Synthesized Output
                           </span>
+
+                          {msg.decidingBot === 'WATCHMAN' && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-white/15 text-white border border-white/20 font-mono inline-flex items-center gap-1 font-semibold">
+                              <span>👑 Decided by WATCHMAN (Chief Arbiter)</span>
+                            </span>
+                          )}
+
+                          {msg.usedFallback && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono inline-flex items-center gap-1">
+                              <span>🚨 Fallback Engaged</span>
+                            </span>
+                          )}
+
+                          {msg.swarmThoughts && msg.swarmThoughts.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedThoughtMsgId(prev => (prev === msg.id ? null : msg.id))
+                              }
+                              className="text-[10px] px-2.5 py-0.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] font-mono cursor-pointer flex items-center gap-1 transition-all"
+                            >
+                              <Users size={11} className="text-white" />
+                              <span>6-Worker Deliberation ({msg.swarmThoughts.length})</span>
+                              {expandedThoughtMsgId === msg.id ? (
+                                <ChevronUp size={11} />
+                              ) : (
+                                <ChevronDown size={11} />
+                              )}
+                            </button>
+                          )}
+
                           {msg.bloatRemoved ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/20 font-mono">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/20 font-mono">
                               -{msg.bloatRemoved} bloat chars
                             </span>
                           ) : null}
@@ -1006,11 +1357,11 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                           <button
                             type="button"
                             onClick={() => handleCopyCode(msg.content, msg.id)}
-                            className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-[#cad7f2] transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                            className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
                             title="Copy code"
                           >
                             {copiedId === msg.id ? (
-                              <Check size={12} className="text-emerald-400" />
+                              <Check size={12} className="text-white" />
                             ) : (
                               <Copy size={12} />
                             )}
@@ -1019,7 +1370,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                           <button
                             type="button"
                             onClick={() => handleDownload(msg.content, msg.detectedLang)}
-                            className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-[#cad7f2] transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                            className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
                             title="Download file"
                           >
                             <Download size={12} />
@@ -1027,6 +1378,82 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                           </button>
                         </div>
                       </div>
+
+                      {/* 6-Worker Swarm & WATCHMAN Deliberation Transcript */}
+                      {msg.swarmThoughts && msg.swarmThoughts.length > 0 && (
+                        <div className="p-4 bg-[#050505] border-b border-white/10 space-y-3 font-mono text-xs">
+                          <div className="flex items-center justify-between text-[11px] pb-2 border-b border-white/[0.08] flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              <Users size={14} className="text-white" />
+                              <span className="font-bold uppercase tracking-wider text-white">
+                                Autonomous Swarm Conversation ({msg.swarmThoughts.length} turns)
+                              </span>
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 border border-white/20 text-zinc-300">
+                                Context Limit: 250t / bot
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedThoughtMsgId(prev => (prev === msg.id ? '__collapsed__' : msg.id))
+                              }
+                              className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white border border-white/[0.08] flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <span>{expandedThoughtMsgId === '__collapsed__' ? 'Expand dialogue' : 'Collapse dialogue'}</span>
+                              {expandedThoughtMsgId === '__collapsed__' ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
+                            </button>
+                          </div>
+
+                          {expandedThoughtMsgId !== '__collapsed__' && (
+                            <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                              {msg.swarmThoughts.map((t, idx) => {
+                                const spec = WORKER_SPECS[t.workerId];
+                                const isWatchman = t.workerId === 'watchman';
+                                return (
+                                  <div
+                                    key={t.id || idx}
+                                    className={`p-3 rounded-xl border flex flex-col gap-1.5 transition-all ${
+                                      isWatchman
+                                        ? 'bg-white/10 border-white/30 text-white shadow-md'
+                                        : 'bg-[#141414] border-white/10 text-zinc-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono text-black shadow-sm bg-white"
+                                        >
+                                          {isWatchman ? '👑' : `W${spec.number}`}
+                                        </span>
+                                        <span className="font-bold text-[11px] text-white">
+                                          {spec.name}
+                                        </span>
+                                        <span className="text-[10px] text-zinc-400">
+                                          ➔ <strong className="text-white">@{t.recipient || spec.recipient}</strong>
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 text-[9px]">
+                                        <span className="px-1.5 py-0.5 rounded bg-white/10 text-zinc-300 font-mono">
+                                          Limit: {t.contextTokensAllocated || 250}t
+                                        </span>
+                                        {t.modelUsed && (
+                                          <span className="px-1.5 py-0.5 rounded bg-white/10 text-zinc-300 font-mono">
+                                            {t.modelUsed}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="text-[12px] font-sans leading-relaxed text-zinc-200 pl-7">
+                                      {t.thought}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="p-4 overflow-x-auto font-mono text-sm leading-relaxed">
                         <CodeBlock
                           language={msg.detectedLang || 'typescript'}
@@ -1043,11 +1470,19 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
 
           {/* ACTIVE STREAMING GENERATION */}
           {building && (
-            <div className="rounded-2xl bg-[#070b14] border border-[#1b263b] overflow-hidden shadow-2xl shadow-black/40 flex flex-col animate-fade-in">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-[#090e1a] border-b border-[#172236] text-xs">
-                <div className="flex items-center gap-2 text-amber-400 font-mono">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  <span>Synthesizing code in Build Mode…</span>
+            <div className="rounded-2xl bg-[#0d0d0d] border border-white/15 overflow-hidden shadow-2xl shadow-black/50 flex flex-col animate-fade-in">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-[#121212] border-b border-white/10 text-xs">
+                <div className="flex items-center gap-2 text-white font-mono">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                  <span>
+                    {isSwarmEnabled
+                      ? activeWorkerId === 'watchman'
+                        ? 'WATCHMAN Authoring Final Production Code…'
+                        : activeWorkerId
+                        ? `${WORKER_SPECS[activeWorkerId].name} Deliberating…`
+                        : '6-Worker Swarm Deliberating…'
+                      : 'Synthesizing code in Build Mode…'}
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -1055,7 +1490,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                     stopRef.current = true;
                     setBuilding(false);
                   }}
-                  className="playful-pop px-3 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs"
+                  className="playful-pop px-3 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs cursor-pointer active:scale-95"
                 >
                   Stop Stream
                 </button>
@@ -1073,28 +1508,28 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
           <div ref={messagesEndRef} />
 
           {/* BUILD PROMPT INPUT & PRESETS */}
-          <section className="rounded-2xl bg-[#0a0f1c] border border-[#1b263b] p-4 sm:p-5 shadow-lg shadow-black/20 space-y-4 mt-auto">
+          <section className="rounded-2xl bg-[#0d0d0d] border border-white/15 p-4 sm:p-5 shadow-2xl shadow-black/40 space-y-4 mt-auto">
             <div className="flex items-center justify-between gap-2">
-              <label className="text-xs font-bold text-[#e1eafc] uppercase tracking-wider flex items-center gap-2">
-                <Code2 size={14} className="text-amber-400" />
+              <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Code2 size={14} className="text-white" />
                 <span>
                   {activeSession && activeSession.messages.length > 0
                     ? 'Continue Building in this Chat'
                     : 'What do you want to build?'}
                 </span>
               </label>
-              <span className="text-[11px] text-[#7182a3]">
+              <span className="text-[11px] text-zinc-400">
                 Enter to build • Shift+Enter for newline
               </span>
             </div>
 
             {ddosNotice && (
-              <div className="p-2.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-2 shadow-md animate-bounce">
+              <div className="p-2.5 px-3 rounded-xl bg-white/10 border border-white/20 text-white text-xs flex items-center justify-between gap-2 shadow-md">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-amber-400 flex-none" />
+                  <ShieldCheck size={14} className="text-white flex-none" />
                   <span>{ddosNotice}</span>
                 </div>
-                <button type="button" onClick={() => setDdosNotice(null)} className="text-amber-300 hover:text-white">
+                <button type="button" onClick={() => setDdosNotice(null)} className="text-zinc-400 hover:text-white">
                   <X size={13} />
                 </button>
               </div>
@@ -1112,7 +1547,8 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                     handleStartBuild();
                   }
                 }}
-                className="w-full p-3.5 rounded-xl bg-[#050810] border border-[#202d44] focus:border-amber-500/70 text-sm text-[#f1f5f9] outline-none transition-all font-mono resize-none leading-relaxed"
+                placeholder="Describe the component, function, schema, or system you want to build in full detail..."
+                className="w-full p-3.5 rounded-xl bg-[#000000] border border-white/15 focus:border-white/40 focus:ring-1 focus:ring-white/20 text-sm text-white placeholder-zinc-500 outline-none transition-all font-mono resize-none leading-relaxed"
               />
               <div className="flex items-center justify-between mt-2.5">
                 {/* Quick Template Chips */}
@@ -1125,7 +1561,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                         setPrompt(t.prompt);
                         handleStartBuild(t.prompt);
                       }}
-                      className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[11px] text-[#8ea0c2] hover:text-white whitespace-nowrap transition-colors cursor-pointer flex-none"
+                      className="playful-pop px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[11px] text-zinc-300 hover:text-white whitespace-nowrap transition-colors cursor-pointer flex-none"
                     >
                       {t.title}
                     </button>
@@ -1141,7 +1577,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                         stopRef.current = true;
                         setBuilding(false);
                       }}
-                      className="playful-pop px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs tracking-wide shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                      className="playful-pop px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs tracking-wide shadow-md transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                     >
                       <Square size={13} />
                       <span>Stop Build</span>
@@ -1151,7 +1587,7 @@ You are Aplx Build Mode. Output clean, functional code for the requested feature
                       type="button"
                       disabled={!prompt.trim()}
                       onClick={() => handleStartBuild()}
-                      className="playful-pop px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-black font-bold text-xs tracking-wide shadow-md shadow-amber-950/40 transition-all cursor-pointer flex items-center gap-2"
+                      className="playful-pop px-5 py-2 rounded-xl bg-white hover:bg-zinc-200 disabled:opacity-40 disabled:hover:bg-white text-black font-bold text-xs tracking-wide shadow-md shadow-white/10 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
                     >
                       <Play size={13} fill="currentColor" />
                       <span>Code & Build</span>

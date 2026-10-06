@@ -67,6 +67,34 @@ export type UserProfile = {
   lastSecurityCheck?: number;
 };
 
+export type BotApiConfig = {
+  apiKey?: string;
+  provider?: string;
+  model?: string;
+};
+
+export type MultipleWorkersConfig = {
+  enabled: boolean;
+  deliberationDepth: 'fast' | 'deep' | 'exhaustive';
+  showDeliberationStream: boolean;
+  autoWatchmanFallback: boolean;
+  activeWorkerCount: 6;
+  // Single vs Dedicated Bot API distribution
+  apiMode: 'single' | 'dedicated';
+  // Use smart rate-friendly model variants (flash/mini) for workers to achieve 30-60m heavy coding
+  useModelVariants: boolean;
+  // Cost-saving tier for latest economical models
+  costSavingTier: 'ultra' | 'balanced' | 'flagship';
+  // Per-bot dedicated API keys (supports multiple keys of the SAME provider)
+  botApiConfigs?: Partial<Record<string, BotApiConfig>>;
+  // Shared key pool for rotating keys from the same provider in single mode
+  keyPool?: string[];
+  // Token budget strategy to preserve quota
+  longevityMode: 'standard' | 'endurance_1hr' | 'maximum_tokens';
+  // Per-bot isolated context limit (tokens) so a single API key never blows through limits
+  botContextLimit?: number;
+};
+
 export type Preferences = {
   theme: ThemePreset;
   themeGradientTarget?: GradientTarget;
@@ -99,6 +127,9 @@ export type Preferences = {
   temperature: number;
   maxHistoryTurns: number;
   streamSpeed: 'fast' | 'normal' | 'smooth';
+
+  // Multiple Workers Feature (Alpha Testing) - Exclusive to Build Mode
+  multipleWorkers?: MultipleWorkersConfig;
 };
 
 export type TokenStats = {

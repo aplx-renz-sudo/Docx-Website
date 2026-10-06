@@ -61,7 +61,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
   },
 ];
 
-const SAVED_PROMPTS_KEY = 'aplx:custom_prompts';
+const SAVED_PROMPTS_KEY = 'viledocx:custom_prompts';
 
 export function PromptLibraryModal({
   isOpen,
@@ -76,7 +76,7 @@ export function PromptLibraryModal({
   const [category, setCategory] = useState<string>('all');
   const [customPrompts, setCustomPrompts] = useState<PromptTemplate[]>(() => {
     try {
-      const raw = localStorage.getItem(SAVED_PROMPTS_KEY);
+      const raw = localStorage.getItem(SAVED_PROMPTS_KEY) || localStorage.getItem('aplx:custom_prompts');
       if (raw) return JSON.parse(raw);
     } catch {}
     return [];

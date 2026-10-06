@@ -56,7 +56,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
         <div className="about-hero-copy">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-xs font-semibold mb-4 shadow-sm shadow-amber-950/40">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-none" />
-            <span>VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED</span>
+            <span>VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED</span>
           </div>
           <p className="eyebrow">Built to be yours.</p>
           <h1>AI should feel like <i className="lively-shimmer-text">yours.</i></h1>
@@ -234,7 +234,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
             textAlign: 'center',
           }}
         >
-          VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
+          VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
         </div>
         <div
           style={{
@@ -245,7 +245,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
             textTransform: 'uppercase',
           }}
         >
-          WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3
+          WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3_SF_02
         </div>
       </footer>
     </main>

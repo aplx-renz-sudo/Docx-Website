@@ -284,10 +284,71 @@ export function getDefaultMultipleWorkersConfig(): MultipleWorkersConfig {
     costSavingTier: 'ultra',
     longevityMode: 'endurance_1hr',
     botContextLimit: 250,
+    // Each bot is handed its OWN separate context budget (tokens). Workers get tight,
+    // role-appropriate slices; the WATCHMAN arbiter gets a larger final-synthesis window.
+    botContextLimits: { ...DEFAULT_BOT_CONTEXT_LIMITS },
     botApiConfigs: {},
     keyPool: [],
   };
 }
+
+/**
+ * SWARM FIX (V3_SF_02): Per-bot isolated context limits.
+ * Previously every bot shared one flat `botContextLimit` slice and the limit was only
+ * cosmetic (never enforced at the API level), which made Swarm mode blow past rate
+ * limits and produce truncated/garbled deliberations. Now each role receives its own
+ * dedicated token budget that is enforced on every request via max output tokens.
+ */
+export const DEFAULT_BOT_CONTEXT_LIMITS: Record<WorkerRole, number> = {
+  architect: 220,   // structural scaffolding brief
+  logic: 240,       // pipeline + state transition spec
+  security: 200,    // tight audit findings
+  optimizer: 200,   // concise refactor directives
+  critic: 220,      // targeted objections
+  synthesizer: 280, // merged consensus handoff
+  watchman: 4096,   // supreme arbiter authors the full production code
+};
+
+const CONTEXT_MIN = 100;
+const CONTEXT_MAX = 8192;
+
+function clampTokens(value: unknown, fallback: number): number {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(CONTEXT_MAX, Math.max(CONTEXT_MIN, n));
+}
+
+/**
+ * Resolves the effective isolated context limit for a single swarm bot.
+ * Priority: per-bot override (botContextLimits[role]) → global slider (botContextLimit)
+ * → role default. The WATCHMAN always keeps at least its synthesis floor so final code
+ * delivery can never be strangled by a worker-sized budget.
+ */
+export function getBotContextLimit(
+  workerRole: WorkerRole,
+  multipleWorkersConfig?: Pick<MultipleWorkersConfig, 'botContextLimit' | 'botContextLimits'> | null
+): number {
+  const roleDefault = DEFAULT_BOT_CONTEXT_LIMITS[workerRole];
+  const perBot = multipleWorkersConfig?.botContextLimits?.[workerRole];
+  const global = multipleWorkersConfig?.botContextLimit;
+
+  let resolved: number;
+  if (typeof perBot === 'number' && Number.isFinite(perBot) && perBot > 0) {
+    resolved = clampTokens(perBot, roleDefault);
+  } else if (typeof global === 'number' && Number.isFinite(global) && global > 0) {
+    resolved = clampTokens(global, roleDefault);
+  } else {
+    resolved = roleDefault;
+  }
+
+  // Watchman floor: it must retain enough budget to author complete production code.
+  if (workerRole === 'watchman') {
+    resolved = Math.max(resolved, CONTEXT_WATCHMAN_FLOOR);
+  }
+  return resolved;
+}
+
+const CONTEXT_WATCHMAN_FLOOR = 1024;
 
 /**
  * Resolves the precise API setup (provider, apiKey, model) for a specific worker bot.
@@ -376,7 +437,8 @@ export function getBotProviderSetup({
 
 /**
  * Executes a single conversational turn for a worker bot with an isolated per-bot Context Limit.
- * Each bot only receives its strictly partitioned slice of the problem and the latest peer dialogue.
+ * Each bot only receives its strictly partitioned slice of the problem and the latest peer dialogue,
+ * AND the limit is now genuinely enforced at the API level via max output tokens (StreamOptions).
  * This guarantees that a SINGLE API key never exceeds rate limits or token context bounds,
  * and allows the bots to actually talk to each other in an active technical debate.
  */
@@ -386,7 +448,7 @@ async function callWorkerTurn({
   priorThoughts,
   setup,
   isCancelled,
-  botContextLimit = 250,
+  botContextLimit = DEFAULT_BOT_CONTEXT_LIMITS[workerRole] ?? 250,
 }: {
   workerRole: WorkerRole;
   prompt: string;
@@ -397,16 +459,21 @@ async function callWorkerTurn({
 }): Promise<string> {
   const spec = WORKER_SPECS[workerRole];
 
-  // 1. Per-bot isolated context limit: tightly slice user prompt to prevent blowing quota
-  const scopedGoal = prompt.length > 220 ? `${prompt.slice(0, 220)}...` : prompt;
+  // 1. Per-bot isolated context budget drives ALL slicing so no bot ever sees more than its share.
+  const wordBudget = Math.max(25, Math.floor(botContextLimit * 0.75)); // ~0.75 words per token
+  const goalSlice = Math.min(prompt.length, Math.max(80, Math.floor(botContextLimit * 1.2)));
+  const scopedGoal =
+    prompt.length > goalSlice ? `${prompt.slice(0, goalSlice)}…[sliced to ${goalSlice} chars by bot context limit]` : prompt;
 
-  // 2. Extract recent inter-bot dialogue relevant to this worker's recipient & discussion
+  // 2. Extract recent inter-bot dialogue relevant to this worker's recipient & discussion,
+  //    sized dynamically to this bot's own context limit instead of a fixed global slice.
+  const peerSlice = Math.max(60, Math.floor((botContextLimit * 4) / 3));
   const recentDialogue = priorThoughts
     .slice(-2)
-    .map(t => `${t.workerName}: "${t.thought.slice(0, 160)}"`)
+    .map(t => `${t.workerName}: "${t.thought.slice(0, peerSlice)}"`)
     .join('\n');
 
-  const compactSystemInstruction = `[SWARM CONTEXT LIMIT: ${botContextLimit} TOKENS ISOLATED PER BOT]
+  const compactSystemInstruction = `[SWARM CONTEXT LIMIT: ${botContextLimit} TOKENS ISOLATED PER BOT (${spec.codename})]
 You are ${spec.name} (${spec.codename}), a specialist AI bot in an autonomous 6-bot engineering swarm.
 Problem Goal: "${scopedGoal}"
 
@@ -417,7 +484,7 @@ DIRECTIVE:
 1. You are talking directly to: ${spec.recipient}.
 2. Begin your message addressing them: "To ${spec.recipient}: "
 3. Deliver your precise specialized decision in 2-3 concise, high-density technical sentences.
-4. No pleasantries. Keep your output under 70 words.`;
+4. No pleasantries. Keep your output under ${wordBudget} words — your reply is hard-capped at ${botContextLimit} tokens.`;
 
   try {
     const provider = createProvider({
@@ -442,7 +509,9 @@ DIRECTIVE:
         if (!isCancelled()) {
           resultText += chunk;
         }
-      }
+      },
+      // Enforce THIS bot's separate context limit at the provider level (hard cap on output tokens)
+      { maxTokens: botContextLimit, temperature: 0.3 }
     );
 
     await Promise.race([
@@ -524,7 +593,8 @@ export async function executeWorkerSwarm({
       timestamp: Date.now(),
       status,
       modelUsed,
-      contextTokensAllocated: contextTokensAllocated || multipleWorkersConfig.botContextLimit || 250,
+      contextTokensAllocated:
+        contextTokensAllocated || getBotContextLimit(workerId, multipleWorkersConfig),
     };
     thoughts.push(item);
     onThought(item);
@@ -570,15 +640,16 @@ export async function executeWorkerSwarm({
         watchman: 'deciding',
       };
 
-      // Call worker turn with per-bot isolated context limit and measure exact response latency
+      // Call worker turn with THIS bot's own isolated context limit and measure exact response latency
       const t0 = performance.now();
+      const botContextLimit = getBotContextLimit(role, multipleWorkersConfig);
       const workerResponse = await callWorkerTurn({
         workerRole: role,
         prompt,
         priorThoughts: thoughts,
         setup: botSetup,
         isCancelled,
-        botContextLimit: multipleWorkersConfig.botContextLimit || 250,
+        botContextLimit,
       });
       const responseTimeMs = Math.max(45, Math.round(performance.now() - t0));
 
@@ -589,7 +660,7 @@ export async function executeWorkerSwarm({
         statusMap[role],
         botSetup.model,
         spec.recipient,
-        multipleWorkersConfig.botContextLimit || 250
+        botContextLimit
       );
 
       // Emit real-time telemetry metric update
@@ -597,7 +668,7 @@ export async function executeWorkerSwarm({
         role,
         responseTimeMs,
         status: responseTimeMs > 650 ? 'delayed' : 'completed',
-        tokensAllocated: multipleWorkersConfig.botContextLimit || 250,
+        tokensAllocated: botContextLimit,
         modelUsed: botSetup.model,
         recipient: spec.recipient,
         note: workerResponse.slice(0, 90),
@@ -620,18 +691,31 @@ export async function executeWorkerSwarm({
     // Watchman addresses the workers and informs them of the final decision
     const watchmanAddress = `WATCHMAN TO SWARM: Reviewing all worker deliberations. Nexus-Arch architecture approved; Core-Algo pipelines accepted; Aegis-Sec security bounds mandated; Critic objections neutralized by Synthesizer. Watchman issuing final production code synthesis.`;
 
+    // Watchman gets its OWN separate (much larger) context window so final code synthesis
+    // is never strangled by the workers' tight debate budgets.
+    const watchmanContextLimit = getBotContextLimit('watchman', multipleWorkersConfig);
+
     pushThought(
       'watchman',
       'Phase 7: WATCHMAN Supreme Arbitration & Production Code Delivery',
       watchmanAddress,
       'deciding',
-      watchmanSetup.model
+      watchmanSetup.model,
+      WORKER_SPECS.watchman.recipient,
+      watchmanContextLimit
     );
 
-    // Compile comprehensive Multi-Worker Swarm Directive for the Watchman
-    const workerSummaryTranscript = thoughts
+    // Compile comprehensive Multi-Worker Swarm Directive for the Watchman.
+    // Transcript is budgeted to the Watchman's own context limit so arbitration input stays bounded.
+    const transcriptBudgetChars = Math.floor(watchmanContextLimit * 2.4);
+    let workerSummaryTranscript = thoughts
       .map(t => `[${t.workerName.toUpperCase()}]: ${t.thought}`)
       .join('\n\n');
+    if (workerSummaryTranscript.length > transcriptBudgetChars) {
+      workerSummaryTranscript =
+        workerSummaryTranscript.slice(0, transcriptBudgetChars) +
+        '\n[Transcript truncated to fit WATCHMAN isolated context budget]';
+    }
 
     const watchmanMasterDirective = `[VILEDOCX BUILD MODE: MULTIPLE WORKERS SWARM ACTIVE]
 You are operating as the supreme "WATCHMAN", the chief arbiter and supreme decision-maker bot in an autonomous 6-Worker Swarm.
@@ -671,7 +755,9 @@ YOU ARE THE WATCHMAN (THE 7TH BOT & SUPREME ARBITER):
           accumulatedCode += chunk;
           onCodeChunk(chunk);
         }
-      }
+      },
+      // WATCHMAN's dedicated context limit enforced at the API level
+      { maxTokens: watchmanContextLimit }
     );
 
     const watchmanResponseTimeMs = Math.max(90, Math.round(performance.now() - tWatchman));
@@ -679,7 +765,7 @@ YOU ARE THE WATCHMAN (THE 7TH BOT & SUPREME ARBITER):
       role: 'watchman',
       responseTimeMs: watchmanResponseTimeMs,
       status: 'completed',
-      tokensAllocated: 850,
+      tokensAllocated: watchmanContextLimit,
       modelUsed: watchmanSetup.model,
       recipient: 'Swarm & User',
       note: 'Final code synthesis delivered by supreme arbiter',

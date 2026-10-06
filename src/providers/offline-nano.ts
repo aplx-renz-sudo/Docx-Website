@@ -1,4 +1,4 @@
-import type { AIProvider, ChatTurn } from './types';
+import type { AIProvider, ChatTurn, StreamOptions } from './types';
 
 /**
  * In-Browser Offline Nano (1M Parameters Heuristic & Thinking Engine)
@@ -24,7 +24,8 @@ export class OfflineNanoProvider implements AIProvider {
   async stream(
     prompt: string,
     history: ChatTurn[],
-    onChunk: (text: string) => void
+    onChunk: (text: string) => void,
+    _options?: StreamOptions
   ): Promise<void> {
     messageCounter++;
 

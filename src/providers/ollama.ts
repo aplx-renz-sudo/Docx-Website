@@ -1,4 +1,4 @@
-import type { AIProvider, ChatTurn } from './types';
+import type { AIProvider, ChatTurn, StreamOptions } from './types';
 
 export class OllamaProvider implements AIProvider {
   constructor(private baseUrl: string, private model: string) {}
@@ -12,7 +12,7 @@ export class OllamaProvider implements AIProvider {
     if (!res.ok) throw new Error(`Ollama unreachable (${res.status})`);
   }
 
-  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void) {
+  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void, options?: StreamOptions) {
     const messages = [
       ...history.map(t => ({ role: t.role === 'model' ? 'assistant' as const : 'user' as const, content: t.content })),
       { role: 'user' as const, content: prompt },
@@ -20,7 +20,19 @@ export class OllamaProvider implements AIProvider {
     const res = await fetch(this.url('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: this.model, messages, stream: true }),
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        stream: true,
+        ...(typeof options?.maxTokens === 'number' || typeof options?.temperature === 'number'
+          ? {
+              options: {
+                ...(typeof options?.maxTokens === 'number' ? { num_predict: options.maxTokens } : {}),
+                ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
+              },
+            }
+          : {}),
+      }),
     });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);

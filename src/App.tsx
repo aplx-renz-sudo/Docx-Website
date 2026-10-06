@@ -1601,7 +1601,7 @@ function Landing({
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-base tracking-tight text-white font-mono">DOCX</span>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white text-black">
-                V3
+                V3_SF_02
               </span>
             </div>
             <span className="text-[10px] font-mono text-zinc-400">Universal AI Engineering Dock</span>
@@ -1643,7 +1643,7 @@ function Landing({
           <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
           <span className="text-white font-bold tracking-wide">DOCX</span>
           <span className="text-zinc-500">•</span>
-          <span className="text-zinc-300">V3 ENGINEERING WORKSTATION</span>
+          <span className="text-zinc-300">V3_SF_02 ENGINEERING WORKSTATION</span>
         </div>
 
         {/* High-Contrast Professional Headline */}
@@ -1677,10 +1677,10 @@ function Landing({
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase bg-white text-black">
                 SYSTEM NOTICE
               </span>
-              <span className="text-xs font-mono font-semibold text-white">V3 Beta Update</span>
+              <span className="text-xs font-mono font-semibold text-white">V3_SF_02 Update (SWARM Fixed)</span>
             </div>
             <p className="text-xs sm:text-sm text-zinc-300 font-mono leading-relaxed">
-              <strong className="text-white font-bold">V3 Beta version</strong> - Maximum fixes made in the SWARM mode, You can use it with caution.
+              <strong className="text-white font-bold">V3_SF_02 version</strong> - SWARM mode fixed: every bot now runs on its own separate context limit. You can use it with confidence.
             </p>
             <div className="pt-2 border-t border-white/10 text-xs text-zinc-400 font-sans flex items-center justify-center sm:justify-start gap-1.5 leading-relaxed">
               <Info size={13} className="text-white flex-shrink-0" />
@@ -1736,7 +1736,7 @@ function Landing({
             </div>
             <h3 className="text-xs font-bold text-white mb-1">Autonomous Swarm</h3>
             <p className="text-[11px] text-neutral-400 leading-relaxed">
-              6-worker architectural debate + Watchman arbiter. <span className="text-neutral-300 font-mono text-[10.5px] block mt-1">⚠️ V3 Alpha has MANY errors in SWARM mode, DO NOT RUN BUILD SWARM MODE, unless you want to</span>
+              6-worker architectural debate + Watchman arbiter. <span className="text-neutral-300 font-mono text-[10.5px] block mt-1">✅ V3_SF_02: SWARM mode fixed — each bot is handed a separate, API-enforced context limit.</span>
             </p>
           </div>
 
@@ -1769,7 +1769,7 @@ function Landing({
           <span>•</span>
           <span className="text-white font-semibold">Universal AI Dock</span>
           <span>•</span>
-          <span>V3 Edition</span>
+          <span>V3_SF_02 Edition</span>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <a
@@ -2179,7 +2179,7 @@ function FullSettingsModal({
       title: 'Security & Platform',
       items: [
         { id: 'privacy' as const, label: 'Data & Privacy Hub', icon: ShieldCheck, badge: '100% Client', color: 'text-zinc-200' },
-        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V3', color: 'text-zinc-200' },
+        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V3_SF_02', color: 'text-zinc-200' },
       ],
     },
   ];
@@ -2343,7 +2343,7 @@ function FullSettingsModal({
                 <div className="about-grid">
                   <div>
                     <small>VERSION</small>
-                    <b>V3 Edition</b>
+                    <b>V3_SF_02 Edition</b>
                   </div>
                   <div>
                     <small>BUILT BY</small>
@@ -2400,7 +2400,7 @@ function FullSettingsModal({
                     textShadow: '0 0 10px rgba(250, 204, 21, 0.6)',
                   }}
                 >
-                  VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
+                  VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
                 </div>
                 <div
                   style={{
@@ -2413,7 +2413,7 @@ function FullSettingsModal({
                     textTransform: 'uppercase',
                   }}
                 >
-                  WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3
+                  WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3_SF_02
                 </div>
               </div>
             )}

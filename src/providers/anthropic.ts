@@ -1,4 +1,4 @@
-import type { AIProvider, ChatTurn, StreamOptions } from './types';
+import type { AIProvider, ChatTurn } from './types';
 
 type AnthropicOptions = {
   apiKey: string;
@@ -35,7 +35,7 @@ export class AnthropicProvider implements AIProvider {
     }
   }
 
-  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void, options?: StreamOptions) {
+  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void) {
     const messages = [
       ...history.map(t => ({
         role: t.role === 'model' ? ('assistant' as const) : ('user' as const),
@@ -55,8 +55,7 @@ export class AnthropicProvider implements AIProvider {
       body: JSON.stringify({
         model: this.opts.model,
         messages,
-        max_tokens: typeof options?.maxTokens === 'number' ? options.maxTokens : 4096,
-        ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
+        max_tokens: 4096,
         stream: true,
       }),
     });

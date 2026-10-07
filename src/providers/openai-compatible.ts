@@ -1,4 +1,4 @@
-import type { AIProvider, ChatTurn, StreamOptions } from './types';
+import type { AIProvider, ChatTurn } from './types';
 
 type OpenAICompatOptions = {
   apiKey: string;
@@ -72,7 +72,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     }
   }
 
-  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void, options?: StreamOptions) {
+  async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void) {
     const res = await fetch(this.url('/chat/completions'), {
       method: 'POST',
       headers: {
@@ -84,8 +84,6 @@ export class OpenAICompatibleProvider implements AIProvider {
         model: this.opts.model,
         messages: toMessages(history, prompt),
         stream: true,
-        ...(typeof options?.maxTokens === 'number' ? { max_tokens: options.maxTokens } : {}),
-        ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
       }),
     });
     await readSSE(res, onChunk);

@@ -2,7 +2,7 @@ import { AnthropicProvider } from './anthropic';
 import { GeminiProvider } from './gemini';
 import { OllamaProvider } from './ollama';
 import { OpenAICompatibleProvider } from './openai-compatible';
-import { OfflineAtomProvider } from './offline-atom-real';
+import { OfflineAtomProvider } from './offline-atom';
 import type { ProviderId } from './registry';
 import type { AIProvider } from './types';
 

@@ -80,6 +80,7 @@ import { OfflineAccountModal } from './components/OfflineAccountModal';
 import { InteractiveTourGuide } from './components/InteractiveTourGuide';
 import { ApiKeyRequiredModal } from './components/ApiKeyRequiredModal';
 import { InstallModal } from './components/InstallModal';
+import { ConnectDeveloperModal } from './components/ConnectDeveloperModal';
 import { ApiLimitModal } from './components/ApiLimitModal';
 import { isApiLimitError, triggerApiLimitModal, subscribeToApiLimit } from './lib/apiLimitHandler';
 import { detectLocalOfflineModels, getCachedLocalModels, type LocalDetectionResult } from './lib/localModelDetector';
@@ -228,6 +229,7 @@ export default function App() {
 
   // Modal states
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
   const [showPromptLib, setShowPromptLib] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showMoreSidebarOptions, setShowMoreSidebarOptions] = useState(false);
@@ -867,6 +869,7 @@ export default function App() {
       />
       <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <InstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
+      <ConnectDeveloperModal isOpen={showConnectModal} onClose={() => setShowConnectModal(false)} />
 
       {/* Missing Provider API Key Modal */}
       <ApiKeyRequiredModal
@@ -918,7 +921,7 @@ export default function App() {
       )}
 
       {view === 'chat' && (
-        <div key="view-chat" className={`workspace-container animate-workspace-slide-in ${sidebar ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+        <div key="view-chat" className={`workspace-container chat-workspace animate-workspace-slide-in ${sidebar ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
           <aside className={`sidebar ${sidebar ? 'open' : 'closed'}`}>
             <div className="brand flex items-center justify-between">
               <button
@@ -1153,6 +1156,9 @@ export default function App() {
                     <button className="playful-pop" onClick={() => setView('about')}>
                       <Orbit size={17} /> About VileDocx
                     </button>
+                    <button className="playful-pop" onClick={() => setShowConnectModal(true)}>
+                      <Sparkles size={17} className="text-[#a5b4fc]" /> Connect with developer
+                    </button>
                     <button
                       type="button"
                       className="playful-pop flex items-center justify-center gap-1.5 w-full py-1 text-xs text-[#86868b] hover:text-white cursor-pointer"
@@ -1165,6 +1171,21 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {/* Connect with the developer button */}
+              <button
+                type="button"
+                id="connect-developer-sidebar-btn"
+                className="connect-dev-btn playful-pop w-full text-left cursor-pointer flex items-center justify-between"
+                onClick={() => setShowConnectModal(true)}
+                title="Connect with the developer (Instagram: r3nz0r, Discord: r3nz0r_1hah, GitHub: aplx-renz-sudo)"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-[#a5b4fc]" />
+                  <span className="font-medium text-[#e0e7ff]">Connect with developer</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono font-medium">r3nz</span>
+              </button>
 
               {/* Install VileDocx button placed directly below Options */}
               <button
@@ -1497,6 +1518,7 @@ export default function App() {
             onAbout={() => setView('about')}
             onPrivacy={() => setView('privacy')}
             onNavigateToBuild={() => setView('build')}
+            onConnectDeveloper={() => setShowConnectModal(true)}
           />
         </div>
       )}
@@ -1601,7 +1623,7 @@ function Landing({
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-base tracking-tight text-white font-mono">DOCX</span>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white text-black">
-                V3_SF_02
+                V3
               </span>
             </div>
             <span className="text-[10px] font-mono text-zinc-400">Universal AI Engineering Dock</span>
@@ -1643,7 +1665,7 @@ function Landing({
           <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
           <span className="text-white font-bold tracking-wide">DOCX</span>
           <span className="text-zinc-500">•</span>
-          <span className="text-zinc-300">V3_SF_02 ENGINEERING WORKSTATION</span>
+          <span className="text-zinc-300">V3 ENGINEERING WORKSTATION</span>
         </div>
 
         {/* High-Contrast Professional Headline */}
@@ -1677,10 +1699,10 @@ function Landing({
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase bg-white text-black">
                 SYSTEM NOTICE
               </span>
-              <span className="text-xs font-mono font-semibold text-white">V3_SF_02 Update (SWARM Fixed)</span>
+              <span className="text-xs font-mono font-semibold text-white">V3 Beta Update</span>
             </div>
             <p className="text-xs sm:text-sm text-zinc-300 font-mono leading-relaxed">
-              <strong className="text-white font-bold">V3_SF_02 version</strong> - SWARM mode fixed: every bot now runs on its own separate context limit. You can use it with confidence.
+              <strong className="text-white font-bold">V3 Beta version</strong> - Maximum fixes made in the SWARM mode, You can use it with caution.
             </p>
             <div className="pt-2 border-t border-white/10 text-xs text-zinc-400 font-sans flex items-center justify-center sm:justify-start gap-1.5 leading-relaxed">
               <Info size={13} className="text-white flex-shrink-0" />
@@ -1736,7 +1758,7 @@ function Landing({
             </div>
             <h3 className="text-xs font-bold text-white mb-1">Autonomous Swarm</h3>
             <p className="text-[11px] text-neutral-400 leading-relaxed">
-              6-worker architectural debate + Watchman arbiter. <span className="text-neutral-300 font-mono text-[10.5px] block mt-1">✅ V3_SF_02: SWARM mode fixed — each bot is handed a separate, API-enforced context limit.</span>
+              6-worker architectural debate + Watchman arbiter. <span className="text-neutral-300 font-mono text-[10.5px] block mt-1">⚠️ V3 Alpha has MANY errors in SWARM mode, DO NOT RUN BUILD SWARM MODE, unless you want to</span>
             </p>
           </div>
 
@@ -1769,7 +1791,7 @@ function Landing({
           <span>•</span>
           <span className="text-white font-semibold">Universal AI Dock</span>
           <span>•</span>
-          <span>V3_SF_02 Edition</span>
+          <span>V3 Edition</span>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <a
@@ -2140,6 +2162,7 @@ function FullSettingsModal({
   onAbout,
   onPrivacy,
   onNavigateToBuild,
+  onConnectDeveloper,
 }: {
   tab: 'provider' | 'tokensaver' | 'workers' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'privacy' | 'about';
   setTab: (x: typeof tab) => void;
@@ -2156,6 +2179,7 @@ function FullSettingsModal({
   onAbout: () => void;
   onPrivacy?: () => void;
   onNavigateToBuild?: () => void;
+  onConnectDeveloper?: () => void;
 }) {
   const SECTIONS = [
     {
@@ -2179,7 +2203,7 @@ function FullSettingsModal({
       title: 'Security & Platform',
       items: [
         { id: 'privacy' as const, label: 'Data & Privacy Hub', icon: ShieldCheck, badge: '100% Client', color: 'text-zinc-200' },
-        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V3_SF_02', color: 'text-zinc-200' },
+        { id: 'about' as const, label: 'About & Ecosystem', icon: Orbit, badge: 'V3', color: 'text-zinc-200' },
       ],
     },
   ];
@@ -2343,7 +2367,7 @@ function FullSettingsModal({
                 <div className="about-grid">
                   <div>
                     <small>VERSION</small>
-                    <b>V3_SF_02 Edition</b>
+                    <b>V3 Edition</b>
                   </div>
                   <div>
                     <small>BUILT BY</small>
@@ -2374,6 +2398,17 @@ function FullSettingsModal({
                   <p>
                     R3nz (developer) , Github copilot, Claude Sonnet and Haiku and Opus models, CodeX (GPT-5.6), Kimi K3, GPT-4, minimax-m3, Grok, Le chat Mistral, Gemini, and many more AIs!
                   </p>
+                  <button
+                    type="button"
+                    onClick={onConnectDeveloper}
+                    className="about-github-btn playful-pop cursor-pointer border border-indigo-500/30 hover:border-indigo-400 bg-indigo-950/30 hover:bg-indigo-900/40 text-indigo-200 mt-2 mb-2 w-full flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={15} className="text-indigo-400" />
+                      <span>Connect with the developer</span>
+                    </div>
+                    <span className="text-[11px] font-mono text-indigo-300">Instagram · Discord · GitHub ↗</span>
+                  </button>
                   <a href="https://github.com/aplx-renz-sudo/Docx-web-app" target="_blank" rel="noreferrer" className="about-github-btn playful-pop">
                     <ExternalLink size={15} />
                     <span>Explore & install VileDocx on GitHub</span>
@@ -2400,7 +2435,7 @@ function FullSettingsModal({
                     textShadow: '0 0 10px rgba(250, 204, 21, 0.6)',
                   }}
                 >
-                  VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
+                  VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
                 </div>
                 <div
                   style={{
@@ -2413,7 +2448,7 @@ function FullSettingsModal({
                     textTransform: 'uppercase',
                   }}
                 >
-                  WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3_SF_02
+                  WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3
                 </div>
               </div>
             )}

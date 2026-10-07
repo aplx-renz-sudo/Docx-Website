@@ -56,7 +56,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
         <div className="about-hero-copy">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-xs font-semibold mb-4 shadow-sm shadow-amber-950/40">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-none" />
-            <span>VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED</span>
+            <span>VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED</span>
           </div>
           <p className="eyebrow">Built to be yours.</p>
           <h1>AI should feel like <i className="lively-shimmer-text">yours.</i></h1>
@@ -199,6 +199,31 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
           <p className="about-body text-zinc-300 leading-relaxed">
             R3nz (developer) , Github copilot, Claude Sonnet and Haiku and Opus models, CodeX (GPT-5.6), Kimi K3, GPT-4, minimax-m3, Grok, Le chat Mistral, Gemini, and many more AIs!
           </p>
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center gap-2.5">
+            <span className="text-xs font-semibold text-zinc-400 mr-1">Connect with developer:</span>
+            <a
+              href="https://github.com/aplx-renz-sudo"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono transition-colors"
+            >
+              GitHub: aplx-renz-sudo ↗
+            </a>
+            <a
+              href="https://www.instagram.com/r3nz0r/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 text-xs font-mono transition-colors"
+            >
+              Instagram: @r3nz0r ↗
+            </a>
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#5865F2]/15 border border-[#5865F2]/30 text-[#c7d2fe] text-xs font-mono"
+              title="Discord ID: r3nz0r_1hah"
+            >
+              Discord: r3nz0r_1hah
+            </span>
+          </div>
         </div>
       </Reveal>
 
@@ -234,7 +259,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
             textAlign: 'center',
           }}
         >
-          VileDocx - V3_SF_02 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
+          VileDocx - V3 edition. Running on VileDocx Engine (code base). Status - UNRELEASED
         </div>
         <div
           style={{
@@ -245,7 +270,7 @@ export function AboutPage({ launch, home, settings, motion }: AboutPageProps) {
             textTransform: 'uppercase',
           }}
         >
-          WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3_SF_02
+          WEBSITE FOR VILEDOCX :- CURRENT VERSION, V3
         </div>
       </footer>
     </main>

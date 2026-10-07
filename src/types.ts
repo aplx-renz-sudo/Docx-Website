@@ -93,9 +93,6 @@ export type MultipleWorkersConfig = {
   longevityMode: 'standard' | 'endurance_1hr' | 'maximum_tokens';
   // Per-bot isolated context limit (tokens) so a single API key never blows through limits
   botContextLimit?: number;
-  // Optional per-bot overrides: each bot gets its OWN isolated context budget.
-  // Falls back to `botContextLimit` (or the role default) when not set for that role.
-  botContextLimits?: Partial<Record<string, number>>;
 };
 
 export type Preferences = {

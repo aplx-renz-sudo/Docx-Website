@@ -29,7 +29,6 @@ import {
   WORKER_SPECS,
   WORKERS_LIST,
   getDefaultMultipleWorkersConfig,
-  getBotContextLimit,
   PROVIDER_VARIANT_MAP,
   type WorkerRole,
 } from '../lib/workerSwarm';
@@ -642,15 +641,13 @@ export function MultipleWorkersSettingsTab({
           {/* Per-Bot Context Limit */}
           <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-white">Bot Context Limit (Global Baseline)</label>
+              <label className="text-xs font-bold text-white">Bot Context Limit</label>
               <span className="text-xs font-mono font-bold text-white">
                 {config.botContextLimit || 250}t
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
               Strictly isolates context per bot so a single API key never blows through rate limits.
-              Each bot also receives its own separate override below — the WATCHMAN keeps a dedicated
-              larger window for final code synthesis regardless of this slider.
             </p>
             <input
               type="range"
@@ -661,46 +658,8 @@ export function MultipleWorkersSettingsTab({
               onChange={e => updateConfig({ botContextLimit: Number(e.target.value) })}
               className="w-full accent-white cursor-pointer pt-1"
             />
-
-            {/* Separate per-bot context limit sliders (SWARM FIX V3_SF_02) */}
-            <div className="pt-2 mt-1 border-t border-white/[0.06] space-y-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
-                Separate Per-Bot Context Budgets
-              </span>
-              {[...WORKERS_LIST, WORKER_SPECS.watchman].map(worker => {
-                const effective = getBotContextLimit(worker.id, config);
-                return (
-                  <div key={worker.id} className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-semibold text-zinc-200 truncate pr-2">
-                        W{worker.number} · {worker.codename}
-                      </label>
-                      <span className="text-[11px] font-mono font-bold text-white whitespace-nowrap">
-                        {effective}t
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={worker.id === 'watchman' ? 1024 : 100}
-                      max={worker.id === 'watchman' ? 8192 : 600}
-                      step={worker.id === 'watchman' ? 256 : 20}
-                      value={effective}
-                      onChange={e =>
-                        updateConfig({
-                          botContextLimits: {
-                            ...(config.botContextLimits || {}),
-                            [worker.id]: Number(e.target.value),
-                          },
-                        })
-                      }
-                      className="w-full accent-white cursor-pointer"
-                    />
-                  </div>
-                );
-              })}
-            </div>
             <span className="text-[10px] font-mono text-zinc-300 block">
-              ✓ Single-API Rate Shield Active · Limits enforced per bot at API level
+              ✓ Single-API Rate Shield Active
             </span>
           </div>
 

@@ -32,20 +32,19 @@ export type ProviderDef = {
 export const PROVIDERS: Record<ProviderId, ProviderDef> = {
   offline: {
     id: 'offline',
-    name: 'VileDocx Offline Atom (1M Thinking)',
+    name: 'Docx Macro 135M (In-Browser)',
     logo: '⚡',
-    description: '100% in-browser 1M offline model with reasoning deliberation',
+    description: 'Bundled SmolLM-135M model that runs on your device, nothing to install',
     keyLabel: 'API key (None needed)',
     keyPlaceholder: 'No API key needed (Runs in browser)',
     requiresKey: false,
-    route: 'In-Browser (100% Offline · Zero Latency)',
+    route: 'In-Browser (100% Offline · WebAssembly)',
     models: [
-      { id: 'viledocx-atom-1m-thinking', label: 'VileDocx Atom 1M (Thinking & Offline)' },
-      { id: 'viledocx-atom-1m-fast', label: 'VileDocx Atom 1M Fast (Instant Response)' },
+      { id: 'docx-macro-135m', label: 'Docx Macro 135M (SmolLM-135M Instruct · On-Device)' },
     ],
-    defaultModel: 'viledocx-atom-1m-thinking',
+    defaultModel: 'docx-macro-135m',
     instructions:
-      'Runs locally inside your browser with 0 API keys and zero internet requirement. Simulates step-by-step reasoning deliberations.',
+      'The SmolLM-135M-Instruct weights ship with this app and run inside your browser through WebAssembly. No install, no API key, no internet.',
   },
   gemini: {
     id: 'gemini',
@@ -259,6 +258,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     baseUrl: 'http://localhost:11434',
     baseUrlLabel: 'Ollama base URL',
     models: [
+      { id: 'smollm:135m', label: 'SmolLM 135M (Ollama Local)', desc: 'smollm:135m' },
       { id: 'llama3.3', label: 'Llama 3.3' },
       { id: 'deepseek-r1', label: 'DeepSeek R1 (Local)' },
       { id: 'qwen2.5-coder', label: 'Qwen 2.5 Coder' },
@@ -266,7 +266,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
       { id: 'phi4', label: 'Microsoft Phi-4' },
       { id: 'gemma2', label: 'Google Gemma 2' },
     ],
-    defaultModel: 'llama3.3',
+    defaultModel: 'smollm:135m',
     instructions:
       'Run Ollama locally (`ollama serve`). VileDocx connects to localhost:11434. Set `OLLAMA_ORIGINS=*` if CORS applies.',
   },

@@ -240,7 +240,7 @@ export function BuildModeView({
   // Auto-scroll messages
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: streamingModelText ? 'auto' : 'smooth', block: 'nearest' });
     }
   }, [sessions, streamingModelText, activeSessionId]);
 

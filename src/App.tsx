@@ -294,6 +294,7 @@ export default function App() {
 
   const stop = useRef(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLElement>(null);
   const typingTimer = useRef<number | null>(null);
   const speechRecognizer = useRef<{ stop: () => void } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -750,8 +751,14 @@ export default function App() {
   };
 
   useEffect(() => {
-    messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isThinking]);
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    if (streaming) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages.length, streaming, isThinking]);
 
   // Dynamic Theme CSS Custom Properties & Gradients
   const themeClass = useMemo(() => {
@@ -1209,7 +1216,7 @@ export default function App() {
 
           {sidebar && (
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 min-[761px]:hidden"
+              className="mobile-sidebar-backdrop"
               onClick={() => setSidebar(false)}
               aria-hidden="true"
             />
@@ -1388,7 +1395,7 @@ export default function App() {
             ) : (
               <>
                 {/* Centered Chat Messages */}
-                <section className="messages">
+                <section className="messages" ref={messagesContainerRef}>
                   {messages
                     .filter(m => m.role !== 'model' || m.content || (isThinking && streaming))
                     .map(m => (
@@ -1417,7 +1424,7 @@ export default function App() {
                       }}
                     />
                   )}
-                  <div ref={messagesEnd} />
+                  <div ref={messagesEnd} className="h-0 w-0 pointer-events-none opacity-0" aria-hidden="true" />
                 </section>
 
                 <div className="relative">

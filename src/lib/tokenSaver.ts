@@ -66,7 +66,7 @@ export function getModelCategory(modelName: string): ModelCategory {
   ) {
     return 'flagship';
   }
-  if (m.includes('ollama') || m.includes('local') || m.includes('qwen') || m.includes('docx-macro')) {
+  if (m.includes('ollama') || m.includes('local') || m.includes('qwen')) {
     return 'local';
   }
   return 'fast';

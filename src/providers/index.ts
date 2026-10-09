@@ -2,7 +2,7 @@ import { AnthropicProvider } from './anthropic';
 import { GeminiProvider } from './gemini';
 import { OllamaProvider } from './ollama';
 import { OpenAICompatibleProvider } from './openai-compatible';
-import { DocxMacroProvider } from './docx-macro';
+import { OfflineAtomProvider } from './offline-atom';
 import type { ProviderId } from './registry';
 import type { AIProvider } from './types';
 
@@ -17,7 +17,7 @@ export function createProvider(setup: ProviderSetup): AIProvider {
   const { provider, apiKey, model, baseUrl } = setup;
   switch (provider) {
     case 'offline':
-      return new DocxMacroProvider(model);
+      return new OfflineAtomProvider(model);
     case 'gemini':
       return new GeminiProvider(apiKey, model);
     case 'openai':

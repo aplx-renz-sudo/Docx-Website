@@ -14,8 +14,6 @@
   },
   "dependencies": {
     "@google/genai": "^1.31.0",
-    "@wllama/wllama": "^3.8.1",
-    "@wllama/wllama-compat": "^3.8.1",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

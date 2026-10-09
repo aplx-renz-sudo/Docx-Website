@@ -47,6 +47,9 @@ STALE_PIDS=""
 if command -v lsof >/dev/null 2>&1; then
     STALE_PIDS=$(lsof -ti tcp:3000 2>/dev/null || true)
 fi
+if [ -z "$STALE_PIDS" ] && command -v fuser >/dev/null 2>&1; then
+    STALE_PIDS=$(fuser 3000/tcp 2>/dev/null | tr -d '[:space:]' || true)
+fi
 if [ -n "$STALE_PIDS" ]; then
     echo " [*] Port 3000 was in use - stopping the old server..."
     echo "$STALE_PIDS" | xargs kill -9 2>/dev/null
@@ -65,6 +68,12 @@ trap 'kill "$SERVER_PID" 2>/dev/null' EXIT INT TERM
 CODE="000"
 ATTEMPT=0
 while [ "$ATTEMPT" -lt 30 ]; do
+    # If the server already died, bail out early
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+        echo " [X] Server process exited before it answered. See viledocx-server.log for details."
+        read -r -p "Press Enter to close..."
+        exit 1
+    fi
     if command -v curl >/dev/null 2>&1; then
         CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 http://localhost:3000 2>/dev/null || true)
     else
@@ -94,4 +103,14 @@ echo "   Press Ctrl+C to stop the server."
 echo " ============================================"
 echo ""
 
-wait "$SERVER_PID"
+# Wait for the server to finish, but notice if it dies unexpectedly
+while kill -0 "$SERVER_PID" 2>/dev/null; do
+    wait "$SERVER_PID"
+    break
+done
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo " [X] Server exited unexpectedly (code $EXIT_CODE). See viledocx-server.log for details."
+fi
+exit $EXIT_CODE

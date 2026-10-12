@@ -36,13 +36,36 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async stream(prompt: string, history: ChatTurn[], onChunk: (text: string) => void) {
-    const messages = [
-      ...history.map(t => ({
-        role: t.role === 'model' ? ('assistant' as const) : ('user' as const),
-        content: t.content,
-      })),
-      { role: 'user' as const, content: prompt },
-    ];
+    let systemPrompt: string | undefined = undefined;
+    const messages: { role: 'user' | 'assistant'; content: string }[] = [];
+
+    for (let i = 0; i < history.length; i++) {
+      const turn = history[i];
+      if (turn.role === 'user' && turn.content.startsWith('[SYSTEM DIRECTIVE:')) {
+        const extracted = turn.content.replace(/^\[SYSTEM DIRECTIVE:\s*/, '').replace(/\]$/, '');
+        systemPrompt = systemPrompt ? `${systemPrompt}\n\n${extracted}` : extracted;
+        if (history[i + 1]?.role === 'model' && history[i + 1]?.content.startsWith('Understood.')) {
+          i++; // skip acknowledgement
+        }
+      } else {
+        messages.push({
+          role: turn.role === 'model' ? ('assistant' as const) : ('user' as const),
+          content: turn.content,
+        });
+      }
+    }
+
+    messages.push({ role: 'user' as const, content: prompt });
+
+    const requestBody: Record<string, any> = {
+      model: this.opts.model,
+      messages,
+      max_tokens: 4096,
+      stream: true,
+    };
+    if (systemPrompt) {
+      requestBody.system = systemPrompt;
+    }
 
     const res = await fetch(`${this.baseUrl}/messages`, {
       method: 'POST',
@@ -52,12 +75,7 @@ export class AnthropicProvider implements AIProvider {
         'anthropic-version': '2023-06-01',
         'dangerously-allow-browser': 'true',
       },
-      body: JSON.stringify({
-        model: this.opts.model,
-        messages,
-        max_tokens: 4096,
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!res.ok) {

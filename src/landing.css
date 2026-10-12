@@ -8,6 +8,59 @@
   animation: subtle-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Halloween Special Animations & Atmospheric FX */
+@keyframes pumpkin-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+.animate-pumpkin-float {
+  animation: pumpkin-float 3.5s ease-in-out infinite;
+}
+
+@keyframes ghost-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.75; }
+  50% { transform: translate(6px, -12px) scale(1.05); opacity: 1; }
+}
+.animate-ghost-drift {
+  animation: ghost-drift 4s ease-in-out infinite;
+}
+
+@keyframes bat-flutter {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-8px, -4px) scale(0.95); }
+  75% { transform: translate(8px, -8px) scale(1.05); }
+}
+.animate-bat-flutter {
+  animation: bat-flutter 5s ease-in-out infinite;
+}
+
+@keyframes candle-flicker {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.8)) brightness(1); }
+  50% { filter: drop-shadow(0 0 14px rgba(255, 180, 0, 1)) brightness(1.15); }
+  75% { filter: drop-shadow(0 0 6px rgba(255, 100, 0, 0.7)) brightness(0.95); }
+}
+.animate-candle-flicker {
+  animation: candle-flicker 2s ease-in-out infinite;
+}
+
+.halloween-landing {
+  background: radial-gradient(circle at 50% 15%, #220b38 0%, #100420 40%, #06020c 85%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.halloween-landing::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 600px;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 122, 0, 0.12), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 @keyframes modal-scale {
   from {
     opacity: 0;

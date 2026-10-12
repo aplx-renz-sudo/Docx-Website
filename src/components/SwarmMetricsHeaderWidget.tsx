@@ -113,7 +113,7 @@ export function SwarmMetricsHeaderWidget({
             ? 'bg-[#18120e] border-amber-600/30 hover:border-amber-500/60 text-zinc-200'
             : 'bg-[#121212] border-white/15 hover:border-white/35 text-zinc-200 hover:text-white'
         }`}
-        title="Swarm Mode V3 Alpha Telemetry & Performance Dashboard (Click to inspect real-time worker latency)"
+        title="Swarm Mode V3 - LIMITED EDITION UPDATE (BETA) Telemetry & Performance Dashboard (Click to inspect real-time worker latency)"
         aria-label="Swarm Mode Live Telemetry Dashboard"
       >
         {/* Pulsing Status Dot */}
@@ -180,7 +180,7 @@ export function SwarmMetricsHeaderWidget({
                       Swarm Mode Telemetry & Jitter Matrix
                     </h2>
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-zinc-300 border border-white/10">
-                      V3 Alpha
+                      V3 - LIMITED EDITION UPDATE (BETA)
                     </span>
                   </div>
                   <p className="text-xs text-zinc-400">
@@ -387,7 +387,7 @@ export function SwarmMetricsHeaderWidget({
                   <div className="p-4 rounded-xl bg-[#16120c] border border-amber-500/30 text-amber-200 space-y-2">
                     <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
                       <ShieldAlert size={16} />
-                      <span>V3 Alpha Notice: Why Swarm Behavior Might Be Erratic</span>
+                      <span>V3 - LIMITED EDITION UPDATE (BETA) Notice: Why Swarm Behavior Might Be Erratic</span>
                     </div>
                     <p className="text-xs text-zinc-300 leading-relaxed">
                       In the current Alpha release, multiple autonomous AI agents debate and critique code in real time. Because all worker turns are currently processed client-side over your connected API keys, several real-world constraints cause behavioral instability.

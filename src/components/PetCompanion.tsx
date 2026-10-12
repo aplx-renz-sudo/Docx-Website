@@ -118,45 +118,80 @@ export const PET_DIALOGUES: Record<
   { idle: string[]; happy: string[]; thinking: string[]; typing: string[] }
 > = {
   fox: {
-    idle: ['Scanning starways...', 'All systems ready!', 'Hunting for bugs 🦊', 'Foxy insights online!'],
-    happy: ['Yay! Great conversation! 💖', 'High five, human!', 'Tail wagging at 100%! ✨'],
-    thinking: ['Synthesizing neural paths...', 'Decrypting cosmic data...', 'Fox ears locked in!'],
+    idle: ['Wearing my cute pumpkin suit! 🎃', 'Scanning starways...', 'All systems ready!', 'Hunting for bugs 🦊', 'Foxy pumpkin insights online!'],
+    happy: ['Yay! Great conversation! 💖', 'High five, human!', 'Tail wagging at 100%! ✨', 'Look at my cute pumpkin costume! lol 🎃', 'Trick or treat! 🍬'],
+    thinking: [
+      'Conjuring spooky pumpkin spells... 🎃',
+      'Stirring the midnight code cauldron... 🔮',
+      'Summoning spectral tokens from the crypt... 👻',
+      'Whispering to haunted ghost workers... 🦇',
+    ],
     typing: ['Ooh, what are we asking?!', 'Listening closely...', 'Ready!'],
   },
   cat: {
-    idle: ['Purrrrr...', 'Watching cosmic dust float by 🐾', 'Nap time soon?', 'Meow-gical computing!'],
-    happy: ['Purrrrrrr! Best prompt ever! 💖', 'Paw-some answer!', 'You give good pets ✨'],
-    thinking: ['Chasing thoughts in the void...', 'Contemplating the universe...', 'Paws on keyboard...'],
+    idle: ['Wearing my cozy pumpkin suit! Purrr 🎃', 'Watching cosmic dust float by 🐾', 'Nap time soon?', 'Meow-gical computing!'],
+    happy: ['Purrrrrrr! Best prompt ever! 💖', 'Paw-some answer!', 'Do you like me wearing the pumpkin? 🎃', 'Purr-fect pumpkin costume! ✨'],
+    thinking: [
+      'Consulting the black cat coven... 🐈‍⬛',
+      'Brewing pumpkin potion in the cauldron... 🎃',
+      'Gazing into the obsidian crystal ball... 🔮',
+      'Chasing phantom wisps in the crypt... 👻',
+    ],
     typing: ['Type type type!', 'Ooh exciting input...', 'Watching your keys!'],
   },
   bunny: {
-    idle: ['Boing! 🐰', 'Nibbling on compressed data', 'Hop into tomorrow!', 'Ears perked up!'],
-    happy: ['Wheeeeee! 🎉', 'Super speedy response!', 'Carrot rocket fueled! 🚀'],
-    thinking: ['Calculating quantum hops...', 'Processing at warp speed...', 'Brain spinning!'],
+    idle: ['Boing! Wearing my pumpkin onesie! 🎃', 'Nibbling on compressed data', 'Hop into tomorrow!', 'Ears perked up!'],
+    happy: ['Wheeeeee! 🎉', 'Super speedy response!', 'Look at me wearing the pumpkin! 🎃', 'Candy corn harvest! 🍬'],
+    thinking: [
+      'Hopping through the haunted pumpkin patch! 🎃',
+      'Munching on spooky candy corn... 🍬',
+      'Casting warp hexes under the full moon... 🌙',
+      'Carving quantum pumpkin thoughts... 🪄',
+    ],
     typing: ['Fast fingers!', 'What are we writing?', 'Hop hop!'],
   },
   dragon: {
-    idle: ['Guarding your private keys 🐉', 'Warm flame idling...', 'Cosmic embers glowing', 'Roar of intelligence!'],
-    happy: ['Sparkling flame burst! 🔥✨', 'Wisdom ignited!', 'Proud dragon nod!'],
-    thinking: ['Breathing cosmic knowledge...', 'Gathering ancient fire...', 'Forging response...'],
+    idle: ['Guarding your private keys 🐉', 'Wearing my mighty pumpkin suit! 🎃', 'Cosmic embers glowing', 'Roar of intelligence!'],
+    happy: ['Sparkling flame burst! 🔥✨', 'Wisdom ignited!', 'Dragon pumpkin armor looks so cute! 🎃', 'Spooky flame dance! 🔥'],
+    thinking: [
+      'Breathing eerie jack-o\'-lantern fire! 🎃🔥',
+      'Awakening ancient graveyard spirits... 🪦',
+      'Guarding the cursed crypt of tokens... 🐉',
+      'Channeling spooky dragon magic... ✨',
+    ],
     typing: ['Incinerating typos...', 'Dragon eyes watching...', 'Speak, traveler!'],
   },
   slime: {
-    idle: ['*Squish squish*', 'Bouncing along 💧', 'Gooey and happy!', 'Gelatinous joy!'],
-    happy: ['*Bouncing happily!* 💖', 'Jiggle jiggle! ✨', 'Splish splash!'],
-    thinking: ['Absorbing inputs...', '*Goo ripple effect*...', 'Expanding brain...'],
+    idle: ['*Inside my cute pumpkin suit!* 🎃', 'Bouncing along 💧', 'Gooey and happy in my pumpkin!', 'Gelatinous joy!'],
+    happy: ['*Bouncing happily!* 💖', 'Jiggle jiggle in my pumpkin! ✨', 'Splish splash!', 'Slime pumpkin wiggle! 🎃'],
+    thinking: [
+      '*Gooey witch slime bubbling in cauldron* 🧪',
+      'Melting into ectoplasm... 👻',
+      'Slime-o\'-lantern glowing in the dark! 🎃',
+      'Spooky oozing thoughts... 🫧',
+    ],
     typing: ['*Watching intently*', 'Wiggle wiggle!', 'Blob mode on!'],
   },
   robo: {
-    idle: ['BEEP BOOP 🤖', 'Status: Optimal', 'Awaiting instruction', 'Telemetry clear.'],
-    happy: ['EFFICIENCY RATING: 100%! 🌟', 'DOPAMINE PROTOCOL ACTIVATED', 'EXCELLENT INTERACTION'],
-    thinking: ['QUERYING NEURAL MESH...', 'SYNTHESIS IN PROGRESS...', 'COMPUTING TOKENS...'],
+    idle: ['BEEP BOOP 🤖', 'WEARING PUMPKIN MECH CHASSIS 🎃', 'Status: Optimal', 'Telemetry clear.'],
+    happy: ['EFFICIENCY RATING: 100%! 🌟', 'DOPAMINE PROTOCOL ACTIVATED', 'PUMPKIN ARMOR 100% CUTE LOL 🎃', 'HALLOWEEN BOOST ONLINE ⚡'],
+    thinking: [
+      'HALLOWEEN PROTOCOL: CARVING PUMPKINS 🎃',
+      'SPOOKY NEURAL SPELL CHARGING... ⚡',
+      'DETECTING PHANTOM FREQUENCIES 👻',
+      'ECTOPLASM VOLTAGE NOMINAL 🔮',
+    ],
     typing: ['BUFFERING KEYSTROKES...', 'INPUT DETECTED', 'PROCESSING...'],
   },
   shiba: {
-    idle: ['Much space, very AI! 🐕', 'Astronaut doge on duty', 'Sniffing tokens...', 'Good vibes only!'],
-    happy: ['SUCH WOW! 🌟', 'VERY SMART! MUCH LOVE! 💖', 'TAIL HELICOPTER GO BRRR!'],
-    thinking: ['Much think...', 'Very ponder...', 'Such concentration!'],
+    idle: ['Much space, very AI! 🐕', 'Wearing my pumpkin astronaut suit! 🎃', 'Sniffing tokens...', 'Good vibes only!'],
+    happy: ['SUCH WOW! 🌟', 'VERY SMART! MUCH LOVE! 💖', 'Look at doge wearing the pumpkin! 🎃', 'MUCH TREAT, VERY SPOOK! 🍬'],
+    thinking: [
+      'Much spooky, very boo! 👻',
+      'Pumpkin doge doing a conjure! 🎃',
+      'Barking at friendly ghosts! 🐕',
+      'Such haunting, much candy! 🍬',
+    ],
     typing: ['Watching you type!', 'Very excite!', 'Ready to launch!'],
   },
   none: {
@@ -200,12 +235,15 @@ export function PetCompanion({
     if (soundEnabled) sounds.playPetChirp();
     setCurrentMood('happy');
 
-    // Add heart particle
+    // Add Halloween celebratory particle
     const rect = e.currentTarget.getBoundingClientRect();
+    const HALLOWEEN_TREATS = ['🎃', '🍬', '👻', '✨', '🦇', '💖'];
+    const chosenEmoji = HALLOWEEN_TREATS[Math.floor(Math.random() * HALLOWEEN_TREATS.length)];
     const newHeart = {
       id: Date.now() + Math.random(),
       x: e.clientX - rect.left - 10,
       y: e.clientY - rect.top - 20,
+      emoji: chosenEmoji,
     };
     setHearts(prev => [...prev.slice(-4), newHeart]);
 
@@ -234,22 +272,40 @@ export function PetCompanion({
 
   return (
     <div className={`pet-container group select-none ${positionClasses[position]}`}>
-      {/* Speech bubble */}
+      {/* Speech bubble with Halloween Theme */}
       {speech && (
-        <div className="pet-bubble absolute bottom-full mb-2 right-0 max-w-[210px] px-3.5 py-2 rounded-xl bg-[#101422]/95 border border-[#8ea8ff55] text-[#dce6ff] text-xs shadow-2xl backdrop-blur-md animate-fade-in pointer-events-none z-50">
+        <div
+          className={`pet-bubble absolute bottom-full mb-2 right-0 max-w-[220px] px-3.5 py-2.5 rounded-xl text-xs shadow-2xl backdrop-blur-md animate-fade-in pointer-events-none z-50 transition-all ${
+            currentMood === 'thinking'
+              ? 'bg-[#190a30]/95 border border-[#ff7a0088] text-[#ffe8d6] shadow-[0_4px_24px_rgba(255,122,0,0.25)]'
+              : 'bg-[#101422]/95 border border-[#8ea8ff55] text-[#dce6ff]'
+          }`}
+        >
+          {currentMood === 'thinking' && (
+            <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-orange-500/25 text-[10px] font-mono text-orange-400 font-bold uppercase tracking-wider">
+              <span className="text-xs">🎃</span>
+              <span>Spooky Deliberation</span>
+            </div>
+          )}
           <p className="leading-snug">{speech}</p>
-          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-[#101422] border-r border-b border-[#8ea8ff55] rotate-45" />
+          <div
+            className={`absolute -bottom-1.5 right-6 w-3 h-3 rotate-45 ${
+              currentMood === 'thinking'
+                ? 'bg-[#190a30] border-r border-b border-[#ff7a0088]'
+                : 'bg-[#101422] border-r border-b border-[#8ea8ff55]'
+            }`}
+          />
         </div>
       )}
 
-      {/* Floating Hearts */}
+      {/* Floating Halloween Treats & Hearts */}
       {hearts.map(h => (
         <span
           key={h.id}
-          className="absolute pointer-events-none text-rose-400 text-sm animate-float-heart"
+          className="absolute pointer-events-none text-sm animate-float-heart z-50 filter drop-shadow-[0_0_6px_rgba(255,140,0,0.6)]"
           style={{ left: `${h.x}px`, top: `${h.y}px` }}
         >
-          💖
+          {(h as any).emoji || '💖'}
         </span>
       ))}
 
@@ -257,8 +313,8 @@ export function PetCompanion({
       <button
         type="button"
         onClick={handlePetClick}
-        title="Click to pet your companion!"
-        className="pet-avatar-btn playful-pop relative flex items-center justify-center p-2 rounded-2xl bg-[#0b0f1a]/85 border border-[#2b354f] hover:border-[#8ea8ff] shadow-xl hover:shadow-[#6d8fff44] transition-all cursor-pointer"
+        title="Click to pet your Halloween companion!"
+        className="pet-avatar-btn playful-pop relative flex items-center justify-center p-2 rounded-2xl bg-[#0b0f1a]/85 border border-[#2b354f] hover:border-[#ff8c00] shadow-xl hover:shadow-[#ff7a0033] transition-all cursor-pointer"
       >
         <PetArtwork
           petId={petId}
@@ -266,16 +322,22 @@ export function PetCompanion({
           size={sizePixelMap[size]}
         />
 
-        {/* Ambient status indicator */}
+        {/* Ambient Halloween Thinking Indicator */}
         {currentMood === 'thinking' && (
-          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 animate-ping opacity-85" />
+          <div
+            className="absolute -top-3.5 -right-2 flex items-center gap-0.5 animate-bounce z-30 pointer-events-none"
+            title="Spooky pumpkin thoughts brewing!"
+          >
+            <span className="text-sm filter drop-shadow-[0_0_10px_rgba(255,122,0,0.95)] animate-pulse">🎃</span>
+            <span className="text-[11px] text-purple-300 animate-pulse">👻</span>
+          </div>
         )}
         {currentMood === 'happy' && (
-          <span className="absolute -top-1 -left-1 text-[11px] animate-bounce">✨</span>
+          <span className="absolute -top-2 -left-1 text-xs animate-bounce filter drop-shadow-[0_0_6px_rgba(255,215,0,0.8)]">🎃✨</span>
         )}
         {currentMood === 'typing' && (
-          <span className="absolute -bottom-1 -right-1 text-[10px] px-1 py-0.5 rounded-full bg-cyan-500 text-black font-bold">
-            ...
+          <span className="absolute -bottom-1 -right-1 text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500 text-black font-bold shadow-sm">
+            🦇...
           </span>
         )}
       </button>

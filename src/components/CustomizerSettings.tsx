@@ -84,6 +84,7 @@ export const PET_LIST: { id: PetId; name: string; desc: string; emoji: string }[
 ];
 
 export const THINKING_STYLES: { id: ThinkingStyle; name: string; desc: string }[] = [
+  { id: 'pumpkin', name: '🎃 Haunted Pumpkin Cauldron', desc: 'Glowing jack-o\'-lantern with bubbling eerie embers & spectral wisps' },
   { id: 'orbital', name: 'Orbital Rings', desc: 'Concentric spinning pulsar rings with orbital nodes' },
   { id: 'synaptic', name: 'Synaptic Waveform', desc: 'Rhythmic pulsing neural frequency bars' },
   { id: 'matrix', name: 'Matrix Terminal', desc: 'Cyber cascade terminal tokens' },

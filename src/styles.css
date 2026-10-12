@@ -47,6 +47,26 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
+/* Authentic Chinese CJK Typography */
+html[lang="zh"],
+body[data-lang="zh"],
+body[data-lang="zh"] *,
+.app.lang-zh,
+.app.lang-zh *,
+.lang-zh {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+/* Authentic Hindi Devanagari Typography */
+html[lang="hi"],
+body[data-lang="hi"],
+body[data-lang="hi"] *,
+.app.lang-hi,
+.app.lang-hi *,
+.lang-hi {
+  font-family: 'Noto Sans Devanagari', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
 /* ChatGPT Dark Mode Canvas (#212121) */
 .space {
   position: fixed;
@@ -1774,4 +1794,155 @@ footer a:hover {
   }
 }
 
+/* ============================================================
+   Halloween Pet Companions & Pumpkin Hat FX
+   ============================================================ */
+@keyframes pumpkin-wobble {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-1.5px) rotate(-1deg); }
+}
 
+.spooky-pumpkin-hat {
+  transform-origin: center bottom;
+  animation: pumpkin-wobble 3s ease-in-out infinite;
+}
+
+@keyframes candle-flicker-face {
+  0%, 100% { opacity: 0.95; filter: drop-shadow(0 0 2px #ffb300); }
+  35% { opacity: 1; filter: drop-shadow(0 0 4.5px #ffe082); }
+  70% { opacity: 0.85; filter: drop-shadow(0 0 2px #ff8f00); }
+}
+
+.pumpkin-candle-face {
+  animation: candle-flicker-face 1.8s ease-in-out infinite;
+}
+
+@keyframes pet-bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-pet-bounce {
+  animation: pet-bounce-soft 2.5s ease-in-out infinite;
+}
+
+@keyframes pet-float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-pet-float {
+  animation: pet-float-soft 3s ease-in-out infinite;
+}
+
+@keyframes pet-hop-soft {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-7px); }
+  60% { transform: translateY(0); }
+}
+
+.animate-pet-hop {
+  animation: pet-hop-soft 2s ease-in-out infinite;
+}
+
+@keyframes pet-jiggle-soft {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.05, 0.95); }
+}
+
+.animate-pet-jiggle {
+  animation: pet-jiggle-soft 2s ease-in-out infinite;
+}
+
+.pumpkin-tummy-face {
+  animation: candle-flicker-face 2s ease-in-out infinite;
+}
+
+@keyframes tail-wag-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(14deg); }
+}
+
+.animate-tail-wag {
+  animation: tail-wag-sway 1.4s ease-in-out infinite;
+}
+
+@keyframes wing-flap-left {
+  0%, 100% { transform: rotate(0deg); transform-origin: 28px 48px; }
+  50% { transform: rotate(-10deg) scale(0.96, 1.04); transform-origin: 28px 48px; }
+}
+
+@keyframes wing-flap-right {
+  0%, 100% { transform: rotate(0deg); transform-origin: 72px 48px; }
+  50% { transform: rotate(10deg) scale(0.96, 1.04); transform-origin: 72px 48px; }
+}
+
+.animate-wing-left {
+  animation: wing-flap-left 1.6s ease-in-out infinite;
+}
+
+.animate-wing-right {
+  animation: wing-flap-right 1.6s ease-in-out infinite;
+}
+
+@keyframes spin-slow-cw {
+  from { transform: rotate(0deg); transform-origin: 50px 50px; }
+  to { transform: rotate(360deg); transform-origin: 50px 50px; }
+}
+
+.animate-spin-slow {
+  animation: spin-slow-cw 20s linear infinite;
+}
+
+/* Celestial Cat Tree Animations */
+@keyframes float-zzz-step-1 {
+  0% { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+  25% { opacity: 0.95; }
+  85% { opacity: 0.8; }
+  100% { transform: translateY(-22px) translateX(6px) scale(1.15); opacity: 0; }
+}
+
+@keyframes float-zzz-step-2 {
+  0% { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+  30% { opacity: 0.95; }
+  85% { opacity: 0.75; }
+  100% { transform: translateY(-28px) translateX(12px) scale(1.25); opacity: 0; }
+}
+
+@keyframes float-zzz-step-3 {
+  0% { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+  35% { opacity: 0.9; }
+  85% { opacity: 0.7; }
+  100% { transform: translateY(-34px) translateX(18px) scale(1.35); opacity: 0; }
+}
+
+.animate-zzz-1 {
+  animation: float-zzz-step-1 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-zzz-2 {
+  animation: float-zzz-step-2 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite 1.1s;
+}
+
+.animate-zzz-3 {
+  animation: float-zzz-step-3 4.0s cubic-bezier(0.4, 0, 0.2, 1) infinite 2.2s;
+}
+
+@keyframes cat-sleep-breathe-subtle {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.02, 0.98); }
+}
+
+.animate-cat-breathe {
+  animation: cat-sleep-breathe-subtle 3.2s ease-in-out infinite;
+  transform-origin: 450px 75px;
+}
+
+@keyframes root-spore-glow {
+  0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 2px #a855f7); }
+  50% { opacity: 1; filter: drop-shadow(0 0 7px #d946ef); }
+}
+
+.animate-root-spore {
+  animation: root-spore-glow 2.8s ease-in-out infinite;
+}

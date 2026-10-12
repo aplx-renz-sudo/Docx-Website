@@ -45,6 +45,7 @@ import { CodeBlock } from './CodeBlock';
 import { SwarmMetricsHeaderWidget } from './SwarmMetricsHeaderWidget';
 import { checkAntiDDoS, sanitizeInputPayload } from '../lib/securityGuard';
 import { isApiLimitError, triggerApiLimitModal } from '../lib/apiLimitHandler';
+import { getProviderLanguageDirective } from '../lib/i18n';
 
 interface BuildModeViewProps {
   providerConfig: ProviderConfig;
@@ -522,6 +523,9 @@ STRICT BLOAT RESTRICTIONS:
       : `[SYSTEM DIRECTIVE: DOCX BUILD MODE]
 You are Docx Build Mode. Output clean, functional code for the requested feature.`;
 
+    const langDirective = getProviderLanguageDirective(preferences?.language || 'en');
+    const finalSystemPrompt = `${systemPrompt}\n\n${langDirective}`;
+
     try {
       const provider = createProvider({
         provider: providerConfig.provider,
@@ -533,7 +537,7 @@ You are Docx Build Mode. Output clean, functional code for the requested feature
       await provider.stream(
         textToBuild,
         [
-          { role: 'user', content: systemPrompt },
+          { role: 'user', content: finalSystemPrompt },
           { role: 'model', content: 'Understood. Build mode active. Returning pure code without conversational fluff.' },
           ...buildHistory,
         ],

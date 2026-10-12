@@ -23,7 +23,7 @@ export type ThemePreset =
 
 export type FontPreset = 'dm-sans' | 'mono' | 'editorial' | 'system';
 export type BubbleStyle = 'glass' | 'minimal' | 'cyber' | 'capsule';
-export type ThinkingStyle = 'orbital' | 'synaptic' | 'matrix' | 'minimal' | 'shimmer';
+export type ThinkingStyle = 'orbital' | 'synaptic' | 'matrix' | 'minimal' | 'shimmer' | 'pumpkin';
 export type PetId = 'fox' | 'cat' | 'bunny' | 'dragon' | 'slime' | 'robo' | 'shiba' | 'none';
 export type PetPosition = 'bottom-right' | 'composer' | 'header' | 'floating';
 export type TokenSaverMode = 'off' | 'light' | 'balanced' | 'aggressive';
@@ -126,11 +126,15 @@ export type Preferences = {
   customSystemPrompt: string;
   temperature: number;
   maxHistoryTurns: number;
-  streamSpeed: 'fast' | 'normal' | 'smooth';
+  // Language & Localization (English (US), German, Hindi, Chinese)
+  language?: 'en' | 'de' | 'hi' | 'zh';
+  streamSpeed?: 'slow' | 'normal' | 'fast';
 
   // Multiple Workers Feature (Alpha Testing) - Exclusive to Build Mode
   multipleWorkers?: MultipleWorkersConfig;
 };
+
+export type LanguageCode = 'en' | 'de' | 'hi' | 'zh';
 
 export type TokenStats = {
   totalTokensProcessed: number;

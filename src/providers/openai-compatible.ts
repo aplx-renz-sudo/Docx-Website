@@ -8,10 +8,26 @@ type OpenAICompatOptions = {
 };
 
 function toMessages(history: ChatTurn[], prompt: string) {
-  return [
-    ...history.map(t => ({ role: t.role === 'model' ? 'assistant' as const : 'user' as const, content: t.content })),
-    { role: 'user' as const, content: prompt },
-  ];
+  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [];
+
+  for (let i = 0; i < history.length; i++) {
+    const turn = history[i];
+    if (turn.role === 'user' && turn.content.startsWith('[SYSTEM DIRECTIVE:')) {
+      const extracted = turn.content.replace(/^\[SYSTEM DIRECTIVE:\s*/, '').replace(/\]$/, '');
+      messages.push({ role: 'system', content: extracted });
+      if (history[i + 1]?.role === 'model' && history[i + 1]?.content.startsWith('Understood.')) {
+        i++; // skip acknowledgement
+      }
+    } else {
+      messages.push({
+        role: turn.role === 'model' ? ('assistant' as const) : ('user' as const),
+        content: turn.content,
+      });
+    }
+  }
+
+  messages.push({ role: 'user' as const, content: prompt });
+  return messages;
 }
 
 async function readSSE(res: Response, onChunk: (text: string) => void) {

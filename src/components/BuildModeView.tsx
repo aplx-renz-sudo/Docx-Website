@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { createProvider } from '../providers';
 import type { ProviderConfig } from '../lib/credential';
-import type { Preferences } from '../types';
+import type { Preferences, ThemeMode } from '../types';
 import {
   WORKER_SPECS,
   WORKERS_LIST,
@@ -53,6 +53,7 @@ interface BuildModeViewProps {
   onOpenSettings: (tab?: string) => void;
   preferences?: Preferences;
   onUpdatePreferences?: (preferences: Preferences) => void;
+  themeMode?: ThemeMode;
 }
 
 export interface BuildMessage {

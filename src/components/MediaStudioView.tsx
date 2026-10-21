@@ -27,6 +27,7 @@ import {
   Video,
 } from 'lucide-react';
 import type { ProviderConfig } from '../lib/credential';
+import type { ThemeMode } from '../types';
 import {
   MediaItem,
   MediaRateLimit,
@@ -46,6 +47,7 @@ interface MediaStudioViewProps {
   providerConfig: ProviderConfig;
   onLeave: () => void;
   onOpenSettings: () => void;
+  themeMode?: ThemeMode;
 }
 
 const IMAGE_STYLES = [
@@ -81,6 +83,7 @@ export const MediaStudioView: React.FC<MediaStudioViewProps> = ({
   providerConfig,
   onLeave,
   onOpenSettings,
+  themeMode,
 }) => {
   const [activeTab, setActiveTab] = useState<'image' | 'video' | 'gallery'>('image');
 
@@ -249,10 +252,24 @@ export const MediaStudioView: React.FC<MediaStudioViewProps> = ({
   const imagesRemaining = Math.max(0, MAX_IMAGES_BEFORE_COOLDOWN - rateLimitState.imageCount);
   const videosRemaining = Math.max(0, MAX_VIDEOS_BEFORE_COOLDOWN - rateLimitState.videoCount);
 
+  const isCandy = themeMode === 'candy';
+
   return (
-    <div className="flex flex-col h-screen w-full bg-[#000000] text-zinc-100 overflow-hidden font-sans selection:bg-white/20 selection:text-white">
+    <div
+      className={`flex flex-col h-screen w-full overflow-hidden font-sans selection:bg-white/20 selection:text-white ${
+        isCandy
+          ? 'bg-gradient-to-br from-[#fff7f9] via-[#ffffff] to-[#fffdfa] text-slate-800 theme-mode-candy'
+          : 'bg-[#000000] text-zinc-100'
+      }`}
+    >
       {/* Top Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#0a0a0a]/95 border-b border-white/10 backdrop-blur-md z-20 flex-none gap-4 shadow-lg shadow-black/60">
+      <header
+        className={`flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md z-20 flex-none gap-4 shadow-lg ${
+          isCandy
+            ? 'bg-white/95 border-b border-pink-200/60 shadow-pink-100/50'
+            : 'bg-[#0a0a0a]/95 border-b border-white/10 shadow-black/60'
+        }`}
+      >
         <div className="flex items-center gap-3 flex-none">
           <button
             type="button"

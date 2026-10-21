@@ -9,7 +9,11 @@ export type Message = ChatTurn & {
   thoughtTime?: number;
   tokensSaved?: number;
   modelUsed?: string;
+  edited?: boolean;
+  editedAt?: number;
 };
+
+export type ThemeMode = 'dark' | 'halloween' | 'candy';
 
 export type ThemePreset =
   | 'black'
@@ -96,6 +100,7 @@ export type MultipleWorkersConfig = {
 };
 
 export type Preferences = {
+  themeMode?: ThemeMode;
   theme: ThemePreset;
   themeGradientTarget?: GradientTarget;
   customTheme: CustomThemeConfig;
@@ -142,3 +147,28 @@ export type TokenStats = {
   totalMessagesSent: number;
   byModel?: Record<string, { processed: number; saved: number }>;
 };
+
+export type ChatPositionsConfig = {
+  composerPosition: 'bottom' | 'top' | 'floating';
+  composerWidth: 'compact' | 'normal' | 'wide' | 'full';
+  composerAlign: 'center' | 'left' | 'right';
+  messagesWidth: 'compact' | 'normal' | 'wide' | 'full';
+  messagesAlign: 'center' | 'left' | 'right';
+  messagesFlow: 'standard' | 'left' | 'compact';
+  headerPosition: 'top' | 'floating' | 'bottom';
+  layoutOrder: ('header' | 'messages' | 'composer')[];
+  inputToolbarAlign: 'left' | 'right';
+};
+
+export const defaultChatPositions: ChatPositionsConfig = {
+  composerPosition: 'bottom',
+  composerWidth: 'normal',
+  composerAlign: 'center',
+  messagesWidth: 'normal',
+  messagesAlign: 'center',
+  messagesFlow: 'standard',
+  headerPosition: 'top',
+  layoutOrder: ['header', 'messages', 'composer'],
+  inputToolbarAlign: 'left',
+};
+

@@ -3,6 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
   ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Save,
   Check,
   ChevronLeft,
   ChevronDown,
@@ -11,6 +14,7 @@ import {
   Menu,
   MessageSquarePlus,
   MoreHorizontal,
+  Move,
   Orbit,
   Globe,
   RotateCcw,
@@ -111,11 +115,14 @@ import {
 import { startSpeechRecognition, speakText, stopSpeaking, isSpeechRecognitionSupported } from './lib/speech';
 import { loadUserProfile, saveUserProfile, isUserSetupComplete, removeUserProfile } from './lib/userProfile';
 import { checkAntiDDoS, sanitizeInputPayload } from './lib/securityGuard';
-import type { View, Message, Preferences, TokenStats, UserProfile, PetId } from './types';
+import type { View, Message, Preferences, TokenStats, UserProfile, PetId, ThemeMode, ChatPositionsConfig } from './types';
+import { defaultChatPositions } from './types';
+import { ChatPositionsBar, SectionPositionHandle } from './components/ChatPositionsBar';
 
 const preferenceKey = 'viledocx:preferences:v3';
 
 const defaultPreferences: Preferences = {
+  themeMode: 'halloween',
   theme: 'black',
   themeGradientTarget: 'both',
   customTheme: {
@@ -320,6 +327,79 @@ export default function App() {
   }, [preferences.language]);
 
   const [ddosAlert, setDdosAlert] = useState<string | null>(null);
+  const [isPositionMode, setIsPositionMode] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
+  const saveToastTimer = useRef<number | null>(null);
+
+  const showSaveToast = (msg: string) => {
+    setSaveToast(msg);
+    if (saveToastTimer.current) clearTimeout(saveToastTimer.current);
+    saveToastTimer.current = window.setTimeout(() => {
+      setSaveToast(null);
+    }, 3000);
+  };
+
+  const CHAT_POSITIONS_KEY = 'viledocx_chat_positions_v1';
+
+  const [savedPositions, setSavedPositions] = useState<ChatPositionsConfig>(() => {
+    try {
+      const raw = localStorage.getItem(CHAT_POSITIONS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...defaultChatPositions, ...parsed };
+      }
+    } catch {}
+    return defaultChatPositions;
+  });
+
+  const [draftPositions, setDraftPositions] = useState<ChatPositionsConfig>(savedPositions);
+
+  const activePositions = isPositionMode ? draftPositions : savedPositions;
+  const hasUnsavedPositions = useMemo(() => {
+    return JSON.stringify(draftPositions) !== JSON.stringify(savedPositions);
+  }, [draftPositions, savedPositions]);
+
+  const handleSavePositions = () => {
+    try {
+      localStorage.setItem(CHAT_POSITIONS_KEY, JSON.stringify(draftPositions));
+      setSavedPositions(draftPositions);
+      showSaveToast("Positions saved to your device!");
+      if (preferences.soundEffects) sounds.playComplete();
+    } catch (e) {
+      console.error("Failed to save positions", e);
+    }
+  };
+
+  const handleResetPositions = () => {
+    setDraftPositions(defaultChatPositions);
+    showSaveToast("Reset to default layout positions. Click 'Save' to keep!");
+  };
+
+  const composerWidthClass = useMemo(() => {
+    switch (activePositions.composerWidth) {
+      case 'compact':
+        return 'max-w-[640px]';
+      case 'wide':
+        return 'max-w-[960px]';
+      case 'full':
+        return 'max-w-none w-full px-2 sm:px-6';
+      case 'normal':
+      default:
+        return 'max-w-[768px]';
+    }
+  }, [activePositions.composerWidth]);
+
+  const composerAlignClass = useMemo(() => {
+    switch (activePositions.composerAlign) {
+      case 'left':
+        return 'mr-auto ml-0 sm:ml-4';
+      case 'right':
+        return 'ml-auto mr-0 sm:mr-4';
+      case 'center':
+      default:
+        return 'mx-auto';
+    }
+  }, [activePositions.composerAlign]);
 
   const stop = useRef(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
@@ -413,6 +493,63 @@ export default function App() {
       saveConversations(updated);
       return updated;
     });
+  };
+
+  // Move message position up or down in chat sequence (User-side only)
+  const handleMoveMessage = (messageId: string, direction: 'up' | 'down') => {
+    updateCurrentMessages(prev => {
+      const idx = prev.findIndex(m => m.id === messageId);
+      if (idx === -1) return prev;
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const updated = [...prev];
+      const [moved] = updated.splice(idx, 1);
+      updated.splice(targetIdx, 0, moved);
+      return updated;
+    });
+    if (preferences.soundEffects) sounds.playComplete();
+    showSaveToast(`Message moved ${direction === 'up' ? 'up' : 'down'} • Saved on device`);
+  };
+
+  // Jump message directly to 1-based position
+  const handleSetMessagePosition = (messageId: string, targetPos1Based: number) => {
+    updateCurrentMessages(prev => {
+      const idx = prev.findIndex(m => m.id === messageId);
+      if (idx === -1) return prev;
+      const targetIdx = Math.max(0, Math.min(targetPos1Based - 1, prev.length - 1));
+      if (idx === targetIdx) return prev;
+      const updated = [...prev];
+      const [moved] = updated.splice(idx, 1);
+      updated.splice(targetIdx, 0, moved);
+      return updated;
+    });
+    if (preferences.soundEffects) sounds.playComplete();
+    showSaveToast(`Repositioned to #${targetPos1Based} • Saved on device`);
+  };
+
+  // Save content edit user-side only (does NOT re-trigger API or wipe history)
+  const handleSaveMessageContent = (messageId: string, newContent: string) => {
+    updateCurrentMessages(prev =>
+      prev.map(m =>
+        m.id === messageId
+          ? {
+              ...m,
+              content: newContent,
+              edited: true,
+              editedAt: Date.now(),
+            }
+          : m
+      )
+    );
+    if (preferences.soundEffects) sounds.playComplete();
+    showSaveToast('✓ Message edit saved on your device (Client-only)');
+  };
+
+  // Delete an individual message turn from conversation
+  const handleDeleteMessage = (messageId: string) => {
+    updateCurrentMessages(prev => prev.filter(m => m.id !== messageId));
+    if (preferences.soundEffects) sounds.playComplete();
+    showSaveToast('Message removed from local chat');
   };
 
   const handleCreateNewChat = () => {
@@ -804,11 +941,20 @@ export default function App() {
     }
   }, [messages.length, streaming, isThinking]);
 
+  const currentThemeMode: ThemeMode = preferences.themeMode || 'halloween';
+
   // Dynamic Theme CSS Custom Properties & Gradients
   const themeClass = useMemo(() => {
-    if (preferences.customTheme?.enabled) return 'custom-theme-active';
-    return `theme-${preferences.theme}`;
-  }, [preferences.theme, preferences.customTheme]);
+    const modeClass = `theme-mode-${currentThemeMode}`;
+    const extraClass =
+      currentThemeMode === 'candy'
+        ? 'light-mode candy-mode'
+        : currentThemeMode === 'dark'
+        ? 'dark-mode dark-theme'
+        : 'halloween-mode halloween-theme';
+    if (preferences.customTheme?.enabled) return `custom-theme-active ${modeClass} ${extraClass}`;
+    return `theme-${preferences.theme} ${modeClass} ${extraClass}`;
+  }, [preferences.theme, preferences.customTheme, currentThemeMode]);
 
   const customThemeStyles = useMemo(() => {
     const PRESET_MAP: Record<string, { start: string; mid: string; accent: string }> = {
@@ -833,6 +979,10 @@ export default function App() {
       gradientEnd = ct.gradientEnd || '#141414';
       accentColor = ct.accentColor || '#ffffff';
       target = ct.gradientTarget || target || 'both';
+    } else if (currentThemeMode === 'candy') {
+      gradientStart = '#fff0f5';
+      gradientEnd = '#fff8e7';
+      accentColor = '#ec4899';
     } else {
       const p = PRESET_MAP[preferences.theme] || PRESET_MAP.black;
       gradientStart = p.start;
@@ -847,7 +997,7 @@ export default function App() {
       '--app-custom-gradient-start': gradientStart,
       '--app-custom-gradient-end': gradientEnd,
       '--app-custom-accent': accentColor,
-      '--theme-glow': `rgba(255, 255, 255, 0.15)`,
+      '--theme-glow': currentThemeMode === 'candy' ? `rgba(236, 72, 153, 0.2)` : `rgba(255, 255, 255, 0.15)`,
     };
 
     if (target === 'background' || target === 'both') {
@@ -858,7 +1008,7 @@ export default function App() {
     }
 
     return styles as React.CSSProperties;
-  }, [preferences.customTheme, preferences.theme, preferences.themeGradientTarget]);
+  }, [preferences.customTheme, preferences.theme, preferences.themeGradientTarget, currentThemeMode]);
 
   return (
     <div
@@ -878,6 +1028,7 @@ export default function App() {
           mood={petMood}
           soundEnabled={preferences.soundEffects}
           interactive={preferences.petInteractive}
+          themeMode={currentThemeMode}
         />
       )}
 
@@ -969,6 +1120,7 @@ export default function App() {
             onOpenGuide={() => setShowTour(true)}
             preferences={preferences}
             onSelectLanguage={code => updatePreferences({ ...preferences, language: code })}
+            onSwitchThemeMode={mode => updatePreferences({ ...preferences, themeMode: mode })}
           />
         </div>
       )}
@@ -1040,7 +1192,11 @@ export default function App() {
 
                 <button
                   type="button"
-                  className="close playful-pop p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className={`close playful-pop p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 border border-pink-200 shadow-sm'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                  }`}
                   onClick={() => setSidebar(false)}
                   title="Collapse sidebar (fill workspace)"
                   aria-label="Collapse sidebar (fill workspace)"
@@ -1050,8 +1206,16 @@ export default function App() {
               </div>
             </div>
 
-            <button className="new-chat playful-pop" onClick={handleCreateNewChat}>
-              <MessageSquarePlus size={17} /> {t.newConversation}
+            <button
+              className={`new-chat playful-pop ${
+                currentThemeMode === 'candy'
+                  ? 'candy-shifting-btn font-bold text-white shadow-md'
+                  : ''
+              }`}
+              onClick={handleCreateNewChat}
+            >
+              <MessageSquarePlus size={17} className={currentThemeMode === 'candy' ? 'text-white' : ''} />
+              <span>{t.newConversation}</span>
             </button>
 
             {/* Go back to landing page */}
@@ -1059,31 +1223,47 @@ export default function App() {
               href="https://docx.freebuff.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="playful-pop my-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-200 hover:text-white border border-white/10 hover:border-white/20 transition-all text-xs font-semibold flex items-center justify-between"
+              className={`playful-pop my-1 px-3 py-2 rounded-lg transition-all text-xs font-semibold flex items-center justify-between ${
+                currentThemeMode === 'candy'
+                  ? 'bg-white hover:bg-pink-50 text-slate-800 hover:text-pink-600 border border-pink-200 shadow-sm'
+                  : 'bg-white/5 hover:bg-white/10 text-zinc-200 hover:text-white border border-white/10 hover:border-white/20'
+              }`}
               title="Go back to landing page (https://docx.freebuff.app)"
             >
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-white" />
+                <Sparkles size={14} className={currentThemeMode === 'candy' ? 'text-pink-500' : 'text-white'} />
                 <span>{t.landingPageArrow}</span>
               </div>
-              <span className="text-[11px] text-zinc-400 font-mono">↗</span>
+              <span className={`text-[11px] font-mono ${currentThemeMode === 'candy' ? 'text-pink-400' : 'text-zinc-400'}`}>↗</span>
             </a>
 
-            {/* Conversation Search (Monochrome Theme) */}
+            {/* Conversation Search (Monochrome Theme / Candy White) */}
             <div className="px-1 my-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#181818] border border-white/10 text-xs text-zinc-300 focus-within:border-white/30">
-                <Search size={13} className="text-zinc-500" />
+              <div
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                  currentThemeMode === 'candy'
+                    ? 'bg-white border border-pink-200 text-slate-800 shadow-sm focus-within:border-pink-400'
+                    : 'bg-[#181818] border border-white/10 text-zinc-300 focus-within:border-white/30'
+                }`}
+              >
+                <Search size={13} className={currentThemeMode === 'candy' ? 'text-pink-500' : 'text-zinc-500'} />
                 <input
                   type="text"
                   value={searchHistory}
                   onChange={e => setSearchHistory(e.target.value)}
                   placeholder={t.searchChats}
-                  className="bg-transparent text-xs text-white outline-none w-full placeholder:text-zinc-500"
+                  className={`bg-transparent text-xs outline-none w-full ${
+                    currentThemeMode === 'candy'
+                      ? 'text-slate-900 placeholder:text-slate-400'
+                      : 'text-white placeholder:text-zinc-500'
+                  }`}
                 />
               </div>
             </div>
 
-            <div className="nav-label">{t.conversationsCount} ({filteredConversations.length})</div>
+            <div className={`nav-label ${currentThemeMode === 'candy' ? 'text-pink-600 font-semibold' : ''}`}>
+              {t.conversationsCount} ({filteredConversations.length})
+            </div>
 
             <div className="overflow-y-auto max-h-[38vh] space-y-1 pr-1">
               {filteredConversations.map(conv => (
@@ -1091,7 +1271,11 @@ export default function App() {
                   key={conv.id}
                   onClick={() => handleSwitchConversation(conv.id)}
                   className={`group relative flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition-all playful-pop ${
-                    conv.id === activeConvId
+                    currentThemeMode === 'candy'
+                      ? conv.id === activeConvId
+                        ? 'bg-white text-pink-600 border-2 border-pink-400 shadow-sm font-semibold'
+                        : 'bg-white/90 text-slate-700 hover:bg-pink-50 hover:text-pink-600 border border-pink-100 shadow-xs'
+                      : conv.id === activeConvId
                       ? 'bg-[#151c2e] text-white border border-[#2d3b5b]'
                       : 'text-[#8ea0c2] hover:bg-[#0f1422] hover:text-white'
                   }`}
@@ -1277,7 +1461,11 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="icon playful-pop inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/10 text-white transition-colors cursor-pointer"
+                  className={`icon playful-pop inline-flex items-center justify-center p-2 rounded-lg transition-colors cursor-pointer ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border border-pink-200 text-pink-600 hover:bg-pink-50 shadow-sm'
+                      : 'hover:bg-white/10 text-white'
+                  }`}
                   onClick={() => setSidebar(prev => !prev)}
                   title={sidebar ? "Collapse sidebar (fill workspace)" : "Open sidebar"}
                   aria-label={sidebar ? "Collapse sidebar (fill workspace)" : "Open sidebar"}
@@ -1331,10 +1519,14 @@ export default function App() {
                         });
                       }
                     }}
-                    className="playful-pop hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/25 text-zinc-200 text-xs font-semibold cursor-pointer shadow-sm"
+                    className={`playful-pop hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-sm ${
+                      currentThemeMode === 'candy'
+                        ? 'bg-white border border-pink-200 text-slate-800 hover:bg-pink-50 hover:text-pink-600'
+                        : 'bg-white/5 border border-white/10 hover:border-white/25 text-zinc-200'
+                    }`}
                     title={`⚡ ${localDetection.models.length} local models detected (${localDetection.provider === 'ollama' ? 'Ollama' : 'LM Studio'}). Click to switch to offline model.`}
                   >
-                    <Cpu size={13} className="text-white" />
+                    <Cpu size={13} className={currentThemeMode === 'candy' ? 'text-pink-500' : 'text-white'} />
                     <span>⚡ {localDetection.models.length} Offline Model{localDetection.models.length > 1 ? 's' : ''} Ready</span>
                   </button>
                 )}
@@ -1345,10 +1537,14 @@ export default function App() {
                   href="https://docx.freebuff.app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-zinc-200 hover:text-white transition-all cursor-pointer"
+                  className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border border-pink-200 text-slate-800 hover:bg-pink-50 hover:text-pink-600 shadow-sm'
+                      : 'bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-200 hover:text-white'
+                  }`}
                   title="Go back to landing page (https://docx.freebuff.app)"
                 >
-                  <Sparkles size={13} className="text-white" />
+                  <Sparkles size={13} className={currentThemeMode === 'candy' ? 'text-pink-500' : 'text-white'} />
                   <span>Landing page -&gt;</span>
                 </a>
 
@@ -1356,7 +1552,11 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAccountModal(true)}
-                  className="profile-avatar-btn playful-pop group border border-white/10 hover:border-white/30 bg-[#1e1e1e] transition-all cursor-pointer flex-none"
+                  className={`profile-avatar-btn playful-pop group transition-all cursor-pointer flex-none ${
+                    currentThemeMode === 'candy'
+                      ? 'border border-pink-300 bg-white shadow-sm'
+                      : 'border border-white/10 hover:border-white/30 bg-[#1e1e1e]'
+                  }`}
                   title={userProfile ? `${userProfile.name} • Click to manage profile & avatar` : 'Offline Account • Click to customize'}
                   aria-label="Manage Account Profile"
                 >
@@ -1391,8 +1591,8 @@ export default function App() {
                     </div>
                   </div>
                   <span
-                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#121212] ${
-                      userProfile ? 'bg-white' : 'bg-zinc-400'
+                    className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border ${
+                      currentThemeMode === 'candy' ? 'border-white bg-pink-500' : 'border-[#121212] ' + (userProfile ? 'bg-white' : 'bg-zinc-400')
                     }`}
                   />
                 </button>
@@ -1409,9 +1609,71 @@ export default function App() {
                   onUpdatePreferences={setPreferences}
                   onOpenSettings={() => goSettings('workers')}
                 />
-                <button className="icon playful-pop" title="Prompt Library (Ctrl+K)" onClick={() => setShowPromptLib(true)}>
-                  <Sparkles size={18} />
+                <button
+                  className={`icon playful-pop ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border border-pink-200 text-pink-600 hover:bg-pink-50 shadow-sm'
+                      : ''
+                  }`}
+                  title="Prompt Library (Ctrl+K)"
+                  onClick={() => setShowPromptLib(true)}
+                >
+                  <Sparkles size={18} className={currentThemeMode === 'candy' ? 'text-pink-500' : ''} />
                 </button>
+
+                {/* Quick Theme Mode Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const modes: ThemeMode[] = ['dark', 'halloween', 'candy'];
+                    const nextIndex = (modes.indexOf(currentThemeMode) + 1) % modes.length;
+                    updatePreferences({ ...preferences, themeMode: modes[nextIndex] });
+                    if (preferences.soundEffects) sounds.playComplete();
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-mono font-medium border transition-all cursor-pointer flex items-center gap-1.5 playful-pop ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border-2 border-pink-400 text-pink-600 hover:bg-pink-50 shadow-sm'
+                      : currentThemeMode === 'dark'
+                      ? 'bg-white/[0.06] border-white/15 text-zinc-200 hover:bg-white/[0.12]'
+                      : 'bg-[#190a30] border-orange-500/30 text-orange-200 hover:bg-[#250d48]'
+                  }`}
+                  title={`Current Theme: ${
+                    currentThemeMode === 'dark' ? 'Dark Mode' : currentThemeMode === 'halloween' ? 'Halloween Edition' : 'Candy (White) Light Mode'
+                  } (Click to switch)`}
+                  aria-label="Switch Theme Mode"
+                >
+                  <span>{currentThemeMode === 'dark' ? '🌙 Dark' : currentThemeMode === 'halloween' ? '🎃 Halloween' : '🍬 Candy'}</span>
+                </button>
+
+                {/* Edit Positions in Main Chat Area Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isPositionMode) {
+                      setDraftPositions(savedPositions);
+                    }
+                    setIsPositionMode(prev => !prev);
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-mono font-medium border transition-all cursor-pointer flex items-center gap-1.5 playful-pop ${
+                    isPositionMode
+                      ? currentThemeMode === 'candy'
+                        ? 'bg-pink-600 text-white border-pink-600 shadow-sm ring-2 ring-pink-300'
+                        : currentThemeMode === 'halloween'
+                        ? 'bg-orange-600 text-black border-orange-500 shadow-sm ring-2 ring-orange-300'
+                        : 'bg-white text-black border-white shadow-sm ring-2 ring-white/40'
+                      : currentThemeMode === 'candy'
+                      ? 'bg-white border border-pink-200 text-pink-600 hover:bg-pink-50 shadow-xs'
+                      : currentThemeMode === 'halloween'
+                      ? 'bg-[#190a30] border-orange-500/30 text-orange-200 hover:bg-[#250d48]'
+                      : 'bg-white/[0.06] border-white/15 text-zinc-200 hover:bg-white/[0.12]'
+                  }`}
+                  title={isPositionMode ? "Finish Editing Chat Positions" : "Edit Positions in Chat Area (Saved user-side)"}
+                  aria-label="Edit Chat Positions"
+                >
+                  <Move size={13} className={isPositionMode ? 'animate-pulse' : ''} />
+                  <span className="hidden sm:inline">{isPositionMode ? 'Done' : 'Edit Positions'}</span>
+                </button>
+
                 <LanguageDropdown
                   preferences={preferences}
                   onSelectLanguage={code => {
@@ -1420,144 +1682,351 @@ export default function App() {
                   compact
                 />
                 {conversations.length > 0 && (
-                  <button className="icon playful-pop" title="Clear conversation" onClick={handleCreateNewChat}>
-                    <Trash2 size={18} />
+                  <button
+                    className={`icon playful-pop ${
+                      currentThemeMode === 'candy'
+                        ? 'bg-white border border-pink-200 text-pink-600 hover:bg-pink-50 shadow-sm'
+                        : ''
+                    }`}
+                    title="Clear conversation"
+                    onClick={handleCreateNewChat}
+                  >
+                    <Trash2 size={18} className={currentThemeMode === 'candy' ? 'text-pink-500' : ''} />
                   </button>
                 )}
-                <button className="icon playful-pop" title={t.settings || 'Settings'} onClick={() => goSettings('provider')}>
-                  <Settings size={18} />
+                <button
+                  className={`icon playful-pop ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border border-pink-200 text-pink-600 hover:bg-pink-50 shadow-sm'
+                      : ''
+                  }`}
+                  title={t.settings || 'Settings'}
+                  onClick={() => goSettings('provider')}
+                >
+                  <Settings size={18} className={currentThemeMode === 'candy' ? 'text-pink-500' : ''} />
                 </button>
               </div>
             </header>
 
+            {/* Position Editor Toolbar if Active */}
+            {isPositionMode && (
+              <ChatPositionsBar
+                currentPositions={savedPositions}
+                draftPositions={draftPositions}
+                onChangeDraft={setDraftPositions}
+                onSave={handleSavePositions}
+                onReset={handleResetPositions}
+                onClose={() => setIsPositionMode(false)}
+                hasUnsavedChanges={hasUnsavedPositions}
+                themeMode={currentThemeMode}
+              />
+            )}
+
             {conversations.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in my-auto">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white mb-4 shadow-lg">
+                <div
+                  className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg ${
+                    currentThemeMode === 'candy'
+                      ? 'bg-white border-2 border-pink-300 text-pink-500 shadow-pink-100'
+                      : 'bg-white/5 border border-white/10 text-white'
+                  }`}
+                >
                   <MessageSquarePlus size={32} />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{t.noActiveConvTitle}</h3>
-                <p className="text-xs text-zinc-400 max-w-sm mb-6 leading-relaxed">
+                <h3 className={`text-lg font-bold mb-2 ${currentThemeMode === 'candy' ? 'text-slate-900' : 'text-white'}`}>
+                  {t.noActiveConvTitle}
+                </h3>
+                <p className={`text-xs max-w-sm mb-6 leading-relaxed ${currentThemeMode === 'candy' ? 'text-slate-600' : 'text-zinc-400'}`}>
                   {t.noActiveConvDesc}
                 </p>
                 <button
                   type="button"
                   onClick={handleCreateNewChat}
-                  className="primary playful-pop inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 shadow-lg cursor-pointer"
+                  className={`primary playful-pop inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold shadow-lg cursor-pointer ${
+                    currentThemeMode === 'candy'
+                      ? 'candy-shifting-btn text-white'
+                      : 'bg-white text-black hover:bg-zinc-200'
+                  }`}
                 >
                   <MessageSquarePlus size={18} />
                   <span>{t.startAConversation}</span>
                 </button>
               </div>
             ) : (
-              <>
-                {/* Centered Chat Messages */}
-                <section className="messages" ref={messagesContainerRef}>
-                  {messages
-                    .filter(m => m.role !== 'model' || m.content || (isThinking && streaming))
-                    .map(m => (
-                      <MessageView
-                        key={m.id}
-                        message={m}
-                        userProfile={userProfile}
-                        regenerate={() => regenerate(m.id)}
-                        isThinking={isThinking && streaming && m.role === 'model' && !m.content}
-                        onSpeak={() => toggleReadAloud(m)}
-                        isSpeaking={speakingMsgId === m.id}
-                        onEditPrompt={newPrompt => send(newPrompt, m.id)}
-                      />
-                    ))}
-
-                  {messages.length === 1 && (
-                    <PromptDeck
-                      choose={send}
-                      showGuideBanner={!userProfile && !guideDismissed}
-                      onOpenGuide={() => setShowTour(true)}
-                      onDismissGuide={() => {
-                        setGuideDismissed(true);
-                        try {
-                          localStorage.setItem('viledocx:guide_dismissed', 'true');
-                        } catch {}
-                      }}
-                    />
-                  )}
-                  <div ref={messagesEnd} className="h-0 w-0 pointer-events-none opacity-0" aria-hidden="true" />
-                </section>
-
-                <div className="relative">
-                  {/* Composer-docked Pet */}
-                  {preferences.petPosition === 'composer' && (
-                    <PetCompanion
-                      petId={preferences.petId}
-                      position="composer"
-                      size={preferences.petSize}
-                      mood={petMood}
-                      soundEnabled={preferences.soundEffects}
-                      interactive={preferences.petInteractive}
-                    />
-                  )}
-
-                  {/* Attachment Pill Indicator */}
-                  {attachmentName && (
-                    <div className="max-w-[820px] mx-auto mb-1 px-4 flex items-center gap-2 text-xs text-[#8ea8ff]">
-                      <span className="bg-[#141b2e] px-2 py-0.5 rounded border border-[#273554] flex items-center gap-1.5">
-                        <Paperclip size={12} /> Attached: {attachmentName}
-                        <button
-                          onClick={() => setAttachmentName(null)}
-                          className="text-[#6d80a6] hover:text-white ml-1"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    </div>
-                  )}
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    accept=".txt,.md,.js,.ts,.tsx,.py,.json,.csv,.sql,.html,.css"
-                  />
-
-                  {/* Anti-DDoS Security Banner */}
-                  {ddosAlert && (
-                    <div className="mb-2.5 p-2.5 px-4 rounded-xl bg-white/10 border border-white/20 text-white text-xs flex items-center justify-between gap-2 shadow-lg animate-bounce">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck size={16} className="text-white flex-none" />
-                        <span className="font-medium">{ddosAlert}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setDdosAlert(null)}
-                        className="text-zinc-400 hover:text-white cursor-pointer"
-                        title="Dismiss"
+              (() => {
+                const composerBlock = (
+                  <div
+                    key="composer-block"
+                    className={`relative ${
+                      activePositions.composerPosition === 'floating'
+                        ? 'composer-floating-wrap'
+                        : activePositions.composerPosition === 'top'
+                        ? 'border-b border-white/10 z-20'
+                        : ''
+                    }`}
+                  >
+                    {isPositionMode && (
+                      <div
+                        className="w-full mx-auto px-4 pt-1"
+                        style={{
+                          maxWidth:
+                            activePositions.composerWidth === 'full'
+                              ? '100%'
+                              : activePositions.composerWidth === 'wide'
+                              ? '960px'
+                              : activePositions.composerWidth === 'compact'
+                              ? '640px'
+                              : '768px',
+                        }}
                       >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  )}
+                        <SectionPositionHandle
+                          sectionTitle={`Composer Input Bar (${activePositions.composerPosition.toUpperCase()})`}
+                          sectionKey="composer"
+                          canMoveUp={activePositions.composerPosition !== 'top'}
+                          canMoveDown={activePositions.composerPosition === 'top'}
+                          onMoveUp={() => {
+                            setDraftPositions({
+                              ...draftPositions,
+                              composerPosition: 'top',
+                              layoutOrder: ['header', 'composer', 'messages'],
+                            });
+                          }}
+                          onMoveDown={() => {
+                            setDraftPositions({
+                              ...draftPositions,
+                              composerPosition: 'bottom',
+                              layoutOrder: ['header', 'messages', 'composer'],
+                            });
+                          }}
+                          themeMode={currentThemeMode}
+                          extraControls={
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="opacity-70">Dock:</span>
+                              <button
+                                type="button"
+                                onClick={() => setDraftPositions({ ...draftPositions, composerPosition: 'top', layoutOrder: ['header', 'composer', 'messages'] })}
+                                className={`px-1.5 py-0.5 rounded cursor-pointer ${activePositions.composerPosition === 'top' ? 'bg-white/20 font-bold' : 'hover:bg-white/10 opacity-70'}`}
+                              >
+                                Top
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDraftPositions({ ...draftPositions, composerPosition: 'bottom', layoutOrder: ['header', 'messages', 'composer'] })}
+                                className={`px-1.5 py-0.5 rounded cursor-pointer ${activePositions.composerPosition === 'bottom' ? 'bg-white/20 font-bold' : 'hover:bg-white/10 opacity-70'}`}
+                              >
+                                Bottom
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDraftPositions({ ...draftPositions, composerPosition: 'floating' })}
+                                className={`px-1.5 py-0.5 rounded cursor-pointer ${activePositions.composerPosition === 'floating' ? 'bg-white/20 font-bold' : 'hover:bg-white/10 opacity-70'}`}
+                              >
+                                Float
+                              </button>
+                            </div>
+                          }
+                        />
+                      </div>
+                    )}
 
-                  <Composer
-                    value={input}
-                    change={handleInputChange}
-                    send={() => send()}
-                    stop={() => {
-                      stop.current = true;
-                      setStreaming(false);
-                      setIsThinking(false);
-                      stopSpeaking();
-                    }}
-                    streaming={streaming}
-                    sendOnEnter={preferences.sendOnEnter}
-                    onOpenPrompts={() => setShowPromptLib(true)}
-                    onOpenHelp={() => setShowTour(true)}
-                    onToggleVoice={toggleVoiceInput}
-                    isRecordingVoice={isRecordingVoice}
-                    onAttachFile={() => fileInputRef.current?.click()}
-                    onOpenTokenSaver={() => goSettings('tokensaver')}
-                  />
-                </div>
-              </>
+                    {/* Composer-docked Pet */}
+                    {preferences.petPosition === 'composer' && (
+                      <PetCompanion
+                        petId={preferences.petId}
+                        position="composer"
+                        size={preferences.petSize}
+                        mood={petMood}
+                        soundEnabled={preferences.soundEffects}
+                        interactive={preferences.petInteractive}
+                        themeMode={currentThemeMode}
+                      />
+                    )}
+
+                    {/* Attachment Pill Indicator */}
+                    {attachmentName && (
+                      <div className="max-w-[820px] mx-auto mb-1 px-4 flex items-center gap-2 text-xs text-[#8ea8ff]">
+                        <span className="bg-[#141b2e] px-2 py-0.5 rounded border border-[#273554] flex items-center gap-1.5">
+                          <Paperclip size={12} /> Attached: {attachmentName}
+                          <button
+                            onClick={() => setAttachmentName(null)}
+                            className="text-[#6d80a6] hover:text-white ml-1 cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </div>
+                    )}
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept=".txt,.md,.js,.ts,.tsx,.py,.json,.csv,.sql,.html,.css"
+                    />
+
+                    {/* Anti-DDoS Security Banner */}
+                    {ddosAlert && (
+                      <div className="mb-2.5 p-2.5 px-4 rounded-xl bg-white/10 border border-white/20 text-white text-xs flex items-center justify-between gap-2 shadow-lg animate-bounce">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck size={16} className="text-white flex-none" />
+                          <span className="font-medium">{ddosAlert}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDdosAlert(null)}
+                          className="text-zinc-400 hover:text-white cursor-pointer"
+                          title="Dismiss"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    )}
+
+                    <Composer
+                      value={input}
+                      change={handleInputChange}
+                      send={() => send()}
+                      stop={() => {
+                        stop.current = true;
+                        setStreaming(false);
+                        setIsThinking(false);
+                        stopSpeaking();
+                      }}
+                      streaming={streaming}
+                      sendOnEnter={preferences.sendOnEnter}
+                      onOpenPrompts={() => setShowPromptLib(true)}
+                      onOpenHelp={() => setShowTour(true)}
+                      onToggleVoice={toggleVoiceInput}
+                      isRecordingVoice={isRecordingVoice}
+                      onAttachFile={() => fileInputRef.current?.click()}
+                      onOpenTokenSaver={() => goSettings('tokensaver')}
+                      themeMode={currentThemeMode}
+                      widthClass={composerWidthClass}
+                      alignClass={composerAlignClass}
+                      isFloating={activePositions.composerPosition === 'floating'}
+                    />
+                  </div>
+                );
+
+                const messagesBlock = (
+                  <div key="messages-block" className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                    {isPositionMode && (
+                      <div
+                        className="w-full mx-auto px-4 pt-1 flex-none"
+                        style={{
+                          maxWidth:
+                            activePositions.messagesWidth === 'full'
+                              ? '100%'
+                              : activePositions.messagesWidth === 'wide'
+                              ? '960px'
+                              : activePositions.messagesWidth === 'compact'
+                              ? '640px'
+                              : '768px',
+                        }}
+                      >
+                        <SectionPositionHandle
+                          sectionTitle="Chat Messages Stream"
+                          sectionKey="messages"
+                          canMoveUp={activePositions.composerPosition === 'top'}
+                          canMoveDown={activePositions.composerPosition !== 'top'}
+                          onMoveUp={() => {
+                            setDraftPositions({
+                              ...draftPositions,
+                              composerPosition: 'bottom',
+                              layoutOrder: ['header', 'messages', 'composer'],
+                            });
+                          }}
+                          onMoveDown={() => {
+                            setDraftPositions({
+                              ...draftPositions,
+                              composerPosition: 'top',
+                              layoutOrder: ['header', 'composer', 'messages'],
+                            });
+                          }}
+                          themeMode={currentThemeMode}
+                          extraControls={
+                            <span className="text-[10px] opacity-70">
+                              Width: {activePositions.messagesWidth} • Align: {activePositions.messagesAlign}
+                            </span>
+                          }
+                        />
+                      </div>
+                    )}
+
+                    <section
+                      className={`messages flex-1 overflow-y-auto ${
+                        activePositions.messagesFlow === 'left' ? 'messages-flow-left' : ''
+                      }`}
+                      ref={messagesContainerRef}
+                      style={{
+                        maxWidth:
+                          activePositions.messagesWidth === 'full'
+                            ? '100%'
+                            : activePositions.messagesWidth === 'wide'
+                            ? '960px'
+                            : activePositions.messagesWidth === 'compact'
+                            ? '640px'
+                            : '768px',
+                        margin:
+                          activePositions.messagesAlign === 'left'
+                            ? '0 auto 0 0'
+                            : activePositions.messagesAlign === 'right'
+                            ? '0 0 0 auto'
+                            : '0 auto',
+                      }}
+                    >
+                      {messages
+                        .filter(m => m.role !== 'model' || m.content || (isThinking && streaming))
+                        .map((m, idx) => (
+                          <MessageView
+                            key={m.id}
+                            message={m}
+                            userProfile={userProfile}
+                            regenerate={() => regenerate(m.id)}
+                            isThinking={isThinking && streaming && m.role === 'model' && !m.content}
+                            onSpeak={() => toggleReadAloud(m)}
+                            isSpeaking={speakingMsgId === m.id}
+                            onEditPrompt={newPrompt => send(newPrompt, m.id)}
+                            themeMode={currentThemeMode}
+                            isPositionMode={isPositionMode}
+                            onMoveUp={() => handleMoveMessage(m.id, 'up')}
+                            onMoveDown={() => handleMoveMessage(m.id, 'down')}
+                            canMoveUp={idx > 0}
+                            canMoveDown={idx < messages.length - 1}
+                          />
+                        ))}
+
+                      {messages.length === 1 && (
+                        <PromptDeck
+                          choose={send}
+                          showGuideBanner={!userProfile && !guideDismissed}
+                          onOpenGuide={() => setShowTour(true)}
+                          onDismissGuide={() => {
+                            setGuideDismissed(true);
+                            try {
+                              localStorage.setItem('viledocx:guide_dismissed', 'true');
+                            } catch {}
+                          }}
+                        />
+                      )}
+                      <div ref={messagesEnd} className="h-0 w-0 pointer-events-none opacity-0" aria-hidden="true" />
+                    </section>
+                  </div>
+                );
+
+                return activePositions.composerPosition === 'top' ? (
+                  <>
+                    {composerBlock}
+                    {messagesBlock}
+                  </>
+                ) : (
+                  <>
+                    {messagesBlock}
+                    {composerBlock}
+                  </>
+                );
+              })()
             )}
           </main>
         </div>
@@ -1582,6 +2051,10 @@ export default function App() {
             onPrivacy={() => setView('privacy')}
             onNavigateToBuild={() => setView('build')}
             onConnectDeveloper={() => setShowConnectModal(true)}
+            onOpenPositionEditor={() => {
+              setView('chat');
+              setIsPositionMode(true);
+            }}
           />
         </div>
       )}
@@ -1615,6 +2088,7 @@ export default function App() {
             onUpdatePreferences={updatePreferences}
             onLeave={() => setView('chat')}
             onOpenSettings={(tab?: string) => goSettings((tab as any) || 'workers')}
+            themeMode={currentThemeMode}
           />
         </div>
       )}
@@ -1625,7 +2099,27 @@ export default function App() {
             providerConfig={providerConfig}
             onLeave={() => setView('chat')}
             onOpenSettings={() => goSettings('provider')}
+            themeMode={currentThemeMode}
           />
+        </div>
+      )}
+      {/* User-side Save Notification Toast */}
+      {saveToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl animate-fade-in border ${
+            currentThemeMode === 'candy'
+              ? 'bg-white border-pink-300 text-pink-700 shadow-pink-200'
+              : currentThemeMode === 'halloween'
+              ? 'bg-[#1e0d30] border-orange-500/50 text-orange-200 shadow-orange-950/50'
+              : 'bg-[#181818] border-white/20 text-white shadow-black/80'
+          }`}
+        >
+          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-none">
+            <Check size={13} />
+          </div>
+          <span className="text-xs font-semibold">{saveToast}</span>
         </div>
       )}
     </div>
@@ -1669,6 +2163,7 @@ function Landing({
   onOpenGuide,
   preferences,
   onSelectLanguage,
+  onSwitchThemeMode,
 }: {
   launch: () => void;
   settings: () => void;
@@ -1679,58 +2174,183 @@ function Landing({
   onOpenGuide?: () => void;
   preferences?: Preferences;
   onSelectLanguage?: (code: LanguageCode) => void;
+  onSwitchThemeMode?: (mode: ThemeMode) => void;
 }) {
   const currentLang: LanguageCode = preferences?.language || 'en';
   const t = getTranslation(currentLang);
+  const themeMode: ThemeMode = preferences?.themeMode || 'halloween';
+
+  const handleModeToggle = (mode: ThemeMode) => {
+    onSwitchThemeMode?.(mode);
+    if (preferences?.soundEffects) sounds.playComplete();
+  };
+
+  const isCandy = themeMode === 'candy';
+  const isDark = themeMode === 'dark';
+  const isHalloween = themeMode === 'halloween';
 
   return (
-    <main className="landing halloween-landing w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 py-6 text-center animate-fade-in-up relative overflow-hidden">
-      {/* Top Halloween Limited Edition Banner / Marquee */}
-      <div className="w-full max-w-5xl mx-auto mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-orange-600/25 via-purple-600/30 to-orange-600/25 border border-orange-500/35 backdrop-blur-md flex items-center justify-center gap-2.5 text-xs font-mono text-orange-200 shadow-lg shadow-orange-950/30">
-        <span className="animate-bounce text-sm">🎃</span>
-        <span className="font-bold text-orange-300">V3 - LIMITED EDITION UPDATE (BETA)</span>
-        <span className="text-orange-500">•</span>
-        <span className="text-orange-100">SPOOKY HALLOWEEN THEME ACTIVE</span>
-        <span className="text-orange-500">•</span>
-        <span className="hidden sm:inline text-orange-200">ALL COMPANIONS WEAR FESTIVE PUMPKINS!</span>
-        <span className="animate-bounce text-sm">👻</span>
-      </div>
-
-      {/* Spooky Floating Atmosphere Decor Left */}
-      <div className="absolute top-28 left-4 sm:left-10 pointer-events-none select-none z-10 hidden md:block animate-pumpkin-float">
-        <div className="p-3.5 rounded-2xl bg-[#1d0a33]/80 border border-orange-500/35 backdrop-blur-md shadow-xl shadow-orange-950/40 flex flex-col items-center">
-          <span className="text-3xl filter drop-shadow-[0_0_12px_rgba(255,120,0,0.95)] animate-candle-flicker">🎃</span>
-          <span className="text-[10px] font-mono text-orange-300 mt-1 font-bold">Trick or Treat!</span>
+    <main
+      className={`landing w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 py-6 text-center animate-fade-in-up relative overflow-hidden ${
+        isCandy
+          ? 'candy-landing bg-white text-slate-800'
+          : isDark
+          ? 'dark-landing bg-[#090d16] text-white'
+          : 'halloween-landing'
+      }`}
+    >
+      {/* Top Banner / Marquee */}
+      {isHalloween && (
+        <div className="w-full max-w-5xl mx-auto mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-orange-600/25 via-purple-600/30 to-orange-600/25 border border-orange-500/35 backdrop-blur-md flex items-center justify-center gap-2.5 text-xs font-mono text-orange-200 shadow-lg shadow-orange-950/30">
+          <span className="animate-bounce text-sm">🎃</span>
+          <span className="font-bold text-orange-300">V3 - LIMITED EDITION UPDATE (BETA)</span>
+          <span className="text-orange-500">•</span>
+          <span className="text-orange-100">SPOOKY HALLOWEEN THEME ACTIVE</span>
+          <span className="text-orange-500">•</span>
+          <span className="hidden sm:inline text-orange-200">ALL COMPANIONS WEAR FESTIVE PUMPKINS!</span>
+          <span className="animate-bounce text-sm">👻</span>
         </div>
-      </div>
+      )}
 
-      {/* Spooky Floating Atmosphere Decor Right */}
-      <div className="absolute top-36 right-4 sm:right-10 pointer-events-none select-none z-10 hidden md:block animate-ghost-drift">
-        <div className="p-3.5 rounded-2xl bg-[#1d0a33]/80 border border-purple-500/35 backdrop-blur-md shadow-xl shadow-purple-950/40 flex flex-col items-center">
-          <span className="text-3xl filter drop-shadow-[0_0_12px_rgba(168,85,247,0.85)]">👻</span>
-          <span className="text-[10px] font-mono text-purple-300 mt-1 font-bold">Boo! Crypt Safe</span>
+      {isCandy && (
+        <div className="w-full max-w-5xl mx-auto mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-pink-500/15 via-amber-300/25 to-pink-500/15 border border-pink-300/60 backdrop-blur-md flex items-center justify-center gap-2.5 text-xs font-mono text-pink-700 shadow-lg shadow-pink-100/50">
+          <span className="animate-bounce text-sm">🍬</span>
+          <span className="font-bold text-pink-800">CANDY (WHITE) LIGHT MODE ACTIVE</span>
+          <span className="text-pink-400">•</span>
+          <span className="text-pink-700">SWEET PINKISH-YELLOW GRADIENTS</span>
+          <span className="text-pink-400">•</span>
+          <span className="hidden sm:inline text-pink-600">CLEAN WHITE SURFACES & RADIANT PASTELS</span>
+          <span className="animate-bounce text-sm">✨</span>
         </div>
-      </div>
+      )}
 
-      {/* Top Halloween Navigation Bar */}
-      <nav className="w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-orange-500/20 relative z-20">
+      {/* Floating Atmosphere Decor Left */}
+      {isHalloween && (
+        <div className="absolute top-28 left-4 sm:left-10 pointer-events-none select-none z-10 hidden md:block animate-pumpkin-float">
+          <div className="p-3.5 rounded-2xl bg-[#1d0a33]/80 border border-orange-500/35 backdrop-blur-md shadow-xl shadow-orange-950/40 flex flex-col items-center">
+            <span className="text-3xl filter drop-shadow-[0_0_12px_rgba(255,120,0,0.95)] animate-candle-flicker">🎃</span>
+            <span className="text-[10px] font-mono text-orange-300 mt-1 font-bold">Trick or Treat!</span>
+          </div>
+        </div>
+      )}
+
+      {isCandy && (
+        <div className="absolute top-28 left-4 sm:left-10 pointer-events-none select-none z-10 hidden md:block animate-pumpkin-float">
+          <div className="p-3.5 rounded-2xl bg-white/95 border border-pink-200/90 backdrop-blur-md shadow-xl shadow-pink-100 flex flex-col items-center">
+            <span className="text-3xl animate-pulse">🍬</span>
+            <span className="text-[10px] font-mono text-pink-700 mt-1 font-bold">Sweet & Private!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Atmosphere Decor Right */}
+      {isHalloween && (
+        <div className="absolute top-36 right-4 sm:right-10 pointer-events-none select-none z-10 hidden md:block animate-ghost-drift">
+          <div className="p-3.5 rounded-2xl bg-[#1d0a33]/80 border border-purple-500/35 backdrop-blur-md shadow-xl shadow-purple-950/40 flex flex-col items-center">
+            <span className="text-3xl filter drop-shadow-[0_0_12px_rgba(168,85,247,0.85)]">👻</span>
+            <span className="text-[10px] font-mono text-purple-300 mt-1 font-bold">Boo! Crypt Safe</span>
+          </div>
+        </div>
+      )}
+
+      {isCandy && (
+        <div className="absolute top-36 right-4 sm:right-10 pointer-events-none select-none z-10 hidden md:block animate-ghost-drift">
+          <div className="p-3.5 rounded-2xl bg-white/95 border border-amber-200/90 backdrop-blur-md shadow-xl shadow-amber-100 flex flex-col items-center">
+            <span className="text-3xl">🧁</span>
+            <span className="text-[10px] font-mono text-amber-700 mt-1 font-bold">Sugar Rush! Safe</span>
+          </div>
+        </div>
+      )}
+
+      {/* Top Navigation Bar */}
+      <nav
+        className={`w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b relative z-20 ${
+          isCandy ? 'border-pink-200/60' : isDark ? 'border-white/10' : 'border-orange-500/20'
+        }`}
+      >
         <div className="wordmark flex items-center gap-3">
           <div className="relative">
             <GalaxyLogoMini size={28} />
-            <span className="absolute -top-1.5 -right-1 text-[10px] animate-pulse">🎃</span>
+            <span className="absolute -top-1.5 -right-1 text-[10px] animate-pulse">
+              {isHalloween ? '🎃' : isCandy ? '🍬' : '⚡'}
+            </span>
           </div>
           <div className="flex flex-col text-left">
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-white font-mono">{t.appName}</span>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-500 text-black shadow-sm shadow-orange-500/30">
-                {t.versionBadge}
+              <span
+                className={`font-extrabold text-base tracking-tight font-mono ${
+                  isCandy ? 'text-slate-900' : 'text-white'
+                }`}
+              >
+                {t.appName}
+              </span>
+              <span
+                className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full shadow-sm ${
+                  isCandy
+                    ? 'bg-pink-500 text-white shadow-pink-500/20'
+                    : isDark
+                    ? 'bg-white text-black'
+                    : 'bg-orange-500 text-black shadow-orange-500/30'
+                }`}
+              >
+                {isCandy ? '🍬 CANDY' : isDark ? '🌙 DARK' : t.versionBadge}
               </span>
             </div>
-            <span className="text-[10px] font-mono text-orange-300/80">{t.appSubtitle}</span>
+            <span
+              className={`text-[10px] font-mono ${
+                isCandy ? 'text-slate-500' : isDark ? 'text-zinc-400' : 'text-orange-300/80'
+              }`}
+            >
+              {t.appSubtitle}
+            </span>
           </div>
         </div>
 
-        <div className="landing-nav-links flex items-center gap-2.5 sm:gap-3">
+        <div className="landing-nav-links flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+          {/* Quick Theme Mode Toggle on Landing Bar */}
+          <div
+            className={`flex items-center p-0.5 rounded-xl border text-[11px] font-mono shadow-sm ${
+              isCandy
+                ? 'bg-pink-50/80 border-pink-200 text-slate-700'
+                : isDark
+                ? 'bg-white/[0.06] border-white/15 text-zinc-300'
+                : 'bg-[#190a30]/80 border-orange-500/30 text-orange-200'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => handleModeToggle('dark')}
+              className={`px-2 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                isDark ? 'bg-white text-black shadow-sm' : 'hover:opacity-80'
+              }`}
+              title="Switch to Dark Mode"
+            >
+              🌙 Dark
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeToggle('halloween')}
+              className={`px-2 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                isHalloween ? 'bg-orange-500 text-black shadow-sm' : 'hover:opacity-80'
+              }`}
+              title="Switch to Halloween Mode"
+            >
+              🎃 Halloween
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeToggle('candy')}
+              className={`px-2 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                isCandy
+                  ? 'bg-gradient-to-r from-pink-500 to-amber-400 text-white shadow-sm'
+                  : 'hover:opacity-80'
+              }`}
+              title="Switch to Candy (White) Light Mode"
+            >
+              🍬 Candy
+            </button>
+          </div>
+
           {preferences && onSelectLanguage && (
             <LanguageDropdown
               preferences={preferences}
@@ -1739,19 +2359,37 @@ function Landing({
           )}
           <button
             onClick={about}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-orange-200 hover:text-white bg-orange-950/30 hover:bg-orange-900/40 border border-orange-500/30 transition-all cursor-pointer"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
+              isCandy
+                ? 'text-slate-700 hover:text-slate-900 bg-pink-50/60 hover:bg-pink-100 border-pink-200'
+                : isDark
+                ? 'text-zinc-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] border-white/15'
+                : 'text-orange-200 hover:text-white bg-orange-950/30 hover:bg-orange-900/40 border-orange-500/30'
+            }`}
           >
             {t.about}
           </button>
           <button
             onClick={privacy}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-orange-200 hover:text-white bg-orange-950/30 hover:bg-orange-900/40 border border-orange-500/30 transition-all cursor-pointer"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
+              isCandy
+                ? 'text-slate-700 hover:text-slate-900 bg-pink-50/60 hover:bg-pink-100 border-pink-200'
+                : isDark
+                ? 'text-zinc-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] border-white/15'
+                : 'text-orange-200 hover:text-white bg-orange-950/30 hover:bg-orange-900/40 border-orange-500/30'
+            }`}
           >
             {t.privacy}
           </button>
           <button
             onClick={launch}
-            className="px-4 py-1.5 rounded-lg text-xs font-bold text-black bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-300 hover:to-amber-300 border border-orange-400 shadow-md shadow-orange-500/30 inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 border ${
+              isCandy
+                ? 'text-white bg-gradient-to-r from-pink-500 to-amber-400 hover:from-pink-400 hover:to-amber-300 border-pink-400 shadow-md shadow-pink-500/25'
+                : isDark
+                ? 'text-black bg-white hover:bg-zinc-200 border-white/60 shadow-md shadow-white/10'
+                : 'text-black bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-300 hover:to-amber-300 border border-orange-400 shadow-md shadow-orange-500/30'
+            }`}
           >
             <span>{t.launch}</span>
             <ArrowUp size={13} style={{ transform: 'rotate(45deg)' }} />
@@ -1759,67 +2397,184 @@ function Landing({
         </div>
       </nav>
 
-      {/* Main Halloween Hero */}
+      {/* Main Hero */}
       <div className="hero flex flex-col items-center justify-center text-center max-w-4xl w-full mx-auto my-auto py-10 sm:py-16 relative z-10">
-        {/* Sleek Astral Core Visual with Spooky Jack-o'-Lantern Glow */}
+        {/* Core Visual */}
         <div className="mb-6 flex justify-center items-center relative">
-          <div className="absolute inset-0 rounded-full bg-orange-500/20 filter blur-2xl pointer-events-none" />
+          <div
+            className={`absolute inset-0 rounded-full filter blur-2xl pointer-events-none ${
+              isCandy ? 'bg-pink-400/20' : isDark ? 'bg-blue-500/10' : 'bg-orange-500/20'
+            }`}
+          />
           <GalaxyLogo size={190} />
-          <div className="absolute -bottom-2 right-8 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1e0a35] border border-orange-500/50 text-[11px] font-mono text-orange-300 shadow-lg">
-            <span>🎃</span>
-            <span className="font-bold">Halloween Edition</span>
+          <div
+            className={`absolute -bottom-2 right-8 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono shadow-lg border ${
+              isCandy
+                ? 'bg-white border-pink-300 text-pink-700 shadow-pink-100'
+                : isDark
+                ? 'bg-[#121622] border-white/20 text-zinc-200'
+                : 'bg-[#1e0a35] border-orange-500/50 text-orange-300'
+            }`}
+          >
+            <span>{isHalloween ? '🎃' : isCandy ? '🍬' : '⚡'}</span>
+            <span className="font-bold">
+              {isHalloween ? 'Halloween Edition' : isCandy ? 'Candy Edition' : 'Production Workspace'}
+            </span>
           </div>
         </div>
 
-        {/* Editorial Pill Kicker: Docx V3 - LIMITED EDITION UPDATE (BETA) */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-950/60 border border-orange-500/45 text-xs font-mono text-orange-200 mb-5 shadow-lg shadow-orange-950/50">
-          <span className="w-2 h-2 rounded-full bg-orange-400 shadow-[0_0_8px_#ff7a00] animate-pulse" />
-          <span className="text-white font-bold tracking-wide">🎃 {t.appName}</span>
-          <span className="text-orange-500">•</span>
-          <span className="text-orange-200 font-semibold">{t.kickerBadge}</span>
+        {/* Editorial Pill Kicker */}
+        <div
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-mono mb-5 shadow-lg ${
+            isCandy
+              ? 'bg-pink-50 border border-pink-200 text-pink-700 shadow-pink-100/50'
+              : isDark
+              ? 'bg-white/[0.06] border border-white/15 text-zinc-300 shadow-black/50'
+              : 'bg-orange-950/60 border border-orange-500/45 text-orange-200 shadow-orange-950/50'
+          }`}
+        >
+          <span
+            className={`w-2 h-2 rounded-full animate-pulse ${
+              isCandy
+                ? 'bg-pink-500 shadow-[0_0_8px_#ec4899]'
+                : isDark
+                ? 'bg-blue-400 shadow-[0_0_8px_#38bdf8]'
+                : 'bg-orange-400 shadow-[0_0_8px_#ff7a00]'
+            }`}
+          />
+          <span className={`font-bold tracking-wide ${isCandy ? 'text-pink-900' : 'text-white'}`}>
+            {isHalloween ? '🎃 ' : isCandy ? '🍬 ' : ''}{t.appName}
+          </span>
+          <span className={isCandy ? 'text-pink-300' : isDark ? 'text-zinc-500' : 'text-orange-500'}>•</span>
+          <span className={`font-semibold ${isCandy ? 'text-pink-700' : isDark ? 'text-zinc-300' : 'text-orange-200'}`}>
+            {isCandy ? 'CANDY (WHITE) LIGHT MODE' : isDark ? 'CLASSIC DARK MODE' : t.kickerBadge}
+          </span>
         </div>
 
-        {/* Spooky High-Contrast Headline */}
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.08] max-w-3xl">
+        {/* Headline */}
+        <h1
+          className={`text-4xl sm:text-6xl font-extrabold tracking-tight mb-4 leading-[1.08] max-w-3xl ${
+            isCandy ? 'text-slate-900' : 'text-white'
+          }`}
+        >
           {t.heroHeadlinePart1}
-          <span className="bg-gradient-to-r from-orange-400 via-amber-200 to-purple-300 bg-clip-text text-transparent">
+          <span
+            className={
+              isCandy
+                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text text-transparent'
+                : isDark
+                ? 'bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent'
+                : 'bg-gradient-to-r from-orange-400 via-amber-200 to-purple-300 bg-clip-text text-transparent'
+            }
+          >
             {t.heroHeadlinePart2}
           </span>
         </h1>
 
-        {/* Crisp Subheading with Halloween Atmosphere */}
-        <p className="text-sm sm:base text-orange-100/90 max-w-2xl leading-relaxed mb-4">
+        {/* Subheading */}
+        <p
+          className={`text-sm sm:base max-w-2xl leading-relaxed mb-4 ${
+            isCandy ? 'text-slate-600' : isDark ? 'text-zinc-300' : 'text-orange-100/90'
+          }`}
+        >
           {t.heroSubhead}
         </p>
 
-        {/* Vile Acronym Clarification Notice */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/40 border border-purple-500/30 text-xs text-purple-200 mb-6 shadow-sm max-w-xl mx-auto">
-          <Info size={13} className="text-purple-300 flex-shrink-0" />
-          <span>
-            {t.acronymNotice}
-          </span>
+        {/* Acronym Clarification Notice */}
+        <div
+          className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs mb-6 shadow-sm max-w-xl mx-auto border ${
+            isCandy
+              ? 'bg-pink-50/80 border-pink-200 text-pink-800'
+              : isDark
+              ? 'bg-white/[0.05] border-white/10 text-zinc-300'
+              : 'bg-purple-950/40 border-purple-500/30 text-purple-200'
+          }`}
+        >
+          <Info
+            size={13}
+            className={`flex-shrink-0 ${isCandy ? 'text-pink-500' : isDark ? 'text-zinc-400' : 'text-purple-300'}`}
+          />
+          <span>{t.acronymNotice}</span>
         </div>
 
-        {/* Halloween Themed Centered Disclaimer Box */}
-        <div className="w-full max-w-2xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl bg-[#160829]/95 border border-orange-500/35 shadow-2xl shadow-orange-950/50 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left transition-all hover:border-orange-500/50">
-          <div className="w-12 h-12 rounded-xl bg-orange-950/80 border border-orange-500/40 flex items-center justify-center flex-shrink-0 text-orange-400 shadow-inner">
-            <span className="text-2xl filter drop-shadow-[0_0_8px_rgba(255,120,0,0.85)]">🎃</span>
+        {/* Centered Disclaimer Box */}
+        <div
+          className={`w-full max-w-2xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl border shadow-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left transition-all ${
+            isCandy
+              ? 'bg-white/95 border-pink-200/90 shadow-pink-100/60 hover:border-pink-300 text-slate-800'
+              : isDark
+              ? 'bg-[#111624]/90 border-white/15 shadow-black/60 hover:border-white/25 text-zinc-200'
+              : 'bg-[#160829]/95 border-orange-500/35 shadow-orange-950/50 hover:border-orange-500/50'
+          }`}
+        >
+          <div
+            className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border ${
+              isCandy
+                ? 'bg-pink-50 border-pink-200 text-pink-500'
+                : isDark
+                ? 'bg-zinc-800 border-white/10 text-blue-400'
+                : 'bg-orange-950/80 border-orange-500/40 text-orange-400'
+            }`}
+          >
+            {isHalloween ? (
+              <span className="text-2xl filter drop-shadow-[0_0_8px_rgba(255,120,0,0.85)]">🎃</span>
+            ) : isCandy ? (
+              <span className="text-2xl">🍬</span>
+            ) : (
+              <ShieldCheck size={24} />
+            )}
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex items-center justify-center sm:justify-start gap-2">
-              <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase bg-orange-500 text-black">
-                🎃 SPOOKY LIMITED EDITION
+              <span
+                className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase ${
+                  isCandy
+                    ? 'bg-pink-500 text-white'
+                    : isDark
+                    ? 'bg-white text-black'
+                    : 'bg-orange-500 text-black'
+                }`}
+              >
+                {isHalloween ? '🎃 SPOOKY LIMITED EDITION' : isCandy ? '🍬 CANDY LIGHT EDITION' : 'CLIENT-SIDE ENCRYPTED'}
               </span>
-              <span className="text-xs font-mono font-semibold text-orange-200">{t.versionNotice}</span>
+              <span
+                className={`text-xs font-mono font-semibold ${
+                  isCandy ? 'text-slate-700' : isDark ? 'text-zinc-300' : 'text-orange-200'
+                }`}
+              >
+                {t.versionNotice}
+              </span>
             </div>
-            <p className="text-xs sm:text-sm text-orange-100 font-mono leading-relaxed">
-              <strong className="text-orange-300 font-bold">{t.versionBadge}</strong> - {t.disclaimerBody}
+            <p
+              className={`text-xs sm:text-sm font-mono leading-relaxed ${
+                isCandy ? 'text-slate-700' : isDark ? 'text-zinc-300' : 'text-orange-100'
+              }`}
+            >
+              <strong
+                className={`font-bold ${
+                  isCandy ? 'text-pink-600' : isDark ? 'text-white' : 'text-orange-300'
+                }`}
+              >
+                {t.versionBadge}
+              </strong>{' '}
+              - {t.disclaimerBody}
             </p>
-            <div className="pt-2 border-t border-orange-500/20 text-xs text-orange-300/80 font-sans flex items-center justify-center sm:justify-start gap-1.5 leading-relaxed">
-              <Info size={13} className="text-orange-400 flex-shrink-0" />
-              <span>
-                ({t.acronymNotice})
-              </span>
+            <div
+              className={`pt-2 border-t text-xs font-sans flex items-center justify-center sm:justify-start gap-1.5 leading-relaxed ${
+                isCandy
+                  ? 'border-pink-100 text-slate-500'
+                  : isDark
+                  ? 'border-white/10 text-zinc-400'
+                  : 'border-orange-500/20 text-orange-300/80'
+              }`}
+            >
+              <Info
+                size={13}
+                className={`flex-shrink-0 ${
+                  isCandy ? 'text-pink-500' : isDark ? 'text-zinc-400' : 'text-orange-400'
+                }`}
+              />
+              <span>({t.acronymNotice})</span>
             </div>
           </div>
         </div>
@@ -1832,60 +2587,145 @@ function Landing({
           launchLabel={t.launchWorkspace}
           settingsLabel={t.configureApiKeys}
           guideLabel={t.interactiveGuide}
+          themeMode={themeMode}
         />
 
-
-
-        {/* Halloween Themed Architectural Trust Matrix */}
+        {/* Architectural Trust Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-left w-full">
-          <div className="p-4 rounded-xl bg-[#140722]/85 border border-orange-500/25 hover:border-orange-500/50 transition-colors shadow-md">
-            <div className="w-8 h-8 rounded-lg bg-orange-950/60 border border-orange-500/40 flex items-center justify-center text-orange-400 mb-2.5">
+          <div
+            className={`p-4 rounded-xl transition-colors shadow-md border ${
+              isCandy
+                ? 'bg-white/95 border-pink-200/80 hover:border-pink-400 shadow-pink-100/50'
+                : isDark
+                ? 'bg-[#101422]/90 border-white/10 hover:border-white/25 shadow-black/50'
+                : 'bg-[#140722]/85 border-orange-500/25 hover:border-orange-500/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 border ${
+                isCandy
+                  ? 'bg-pink-100/70 border-pink-200 text-pink-600'
+                  : isDark
+                  ? 'bg-zinc-800/80 border-white/15 text-blue-400'
+                  : 'bg-orange-950/60 border-orange-500/40 text-orange-400'
+              }`}
+            >
               <Orbit size={16} />
             </div>
-            <h3 className="text-xs font-bold text-orange-200 mb-1">{t.featDirectTitle}</h3>
-            <p className="text-[11px] text-orange-100/70 leading-relaxed">
+            <h3 className={`text-xs font-bold mb-1 ${isCandy ? 'text-slate-900' : isDark ? 'text-white' : 'text-orange-200'}`}>
+              {t.featDirectTitle}
+            </h3>
+            <p className={`text-[11px] leading-relaxed ${isCandy ? 'text-slate-600' : isDark ? 'text-zinc-400' : 'text-orange-100/70'}`}>
               {t.featDirectDesc}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#140722]/85 border border-purple-500/25 hover:border-purple-500/50 transition-colors shadow-md">
-            <div className="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-500/40 flex items-center justify-center text-purple-300 mb-2.5">
+          <div
+            className={`p-4 rounded-xl transition-colors shadow-md border ${
+              isCandy
+                ? 'bg-white/95 border-purple-200/80 hover:border-purple-400 shadow-purple-100/50'
+                : isDark
+                ? 'bg-[#101422]/90 border-white/10 hover:border-white/25 shadow-black/50'
+                : 'bg-[#140722]/85 border-purple-500/25 hover:border-purple-500/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 border ${
+                isCandy
+                  ? 'bg-purple-100/70 border-purple-200 text-purple-600'
+                  : isDark
+                  ? 'bg-zinc-800/80 border-white/15 text-purple-400'
+                  : 'bg-purple-950/60 border-purple-500/40 text-purple-300'
+              }`}
+            >
               <Users size={16} />
             </div>
-            <h3 className="text-xs font-bold text-purple-200 mb-1">{t.featSwarmTitle}</h3>
-            <p className="text-[11px] text-purple-100/70 leading-relaxed">
+            <h3 className={`text-xs font-bold mb-1 ${isCandy ? 'text-slate-900' : isDark ? 'text-white' : 'text-purple-200'}`}>
+              {t.featSwarmTitle}
+            </h3>
+            <p className={`text-[11px] leading-relaxed ${isCandy ? 'text-slate-600' : isDark ? 'text-zinc-400' : 'text-purple-100/70'}`}>
               {t.featSwarmDesc}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#140722]/85 border border-emerald-500/25 hover:border-emerald-500/50 transition-colors shadow-md">
-            <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-2.5">
+          <div
+            className={`p-4 rounded-xl transition-colors shadow-md border ${
+              isCandy
+                ? 'bg-white/95 border-emerald-200/80 hover:border-emerald-400 shadow-emerald-100/50'
+                : isDark
+                ? 'bg-[#101422]/90 border-white/10 hover:border-white/25 shadow-black/50'
+                : 'bg-[#140722]/85 border-emerald-500/25 hover:border-emerald-500/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 border ${
+                isCandy
+                  ? 'bg-emerald-100/70 border-emerald-200 text-emerald-600'
+                  : isDark
+                  ? 'bg-zinc-800/80 border-white/15 text-emerald-400'
+                  : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400'
+              }`}
+            >
               <ShieldCheck size={16} />
             </div>
-            <h3 className="text-xs font-bold text-emerald-200 mb-1">{t.featClientTitle}</h3>
-            <p className="text-[11px] text-emerald-100/70 leading-relaxed">
+            <h3 className={`text-xs font-bold mb-1 ${isCandy ? 'text-slate-900' : isDark ? 'text-white' : 'text-emerald-200'}`}>
+              {t.featClientTitle}
+            </h3>
+            <p className={`text-[11px] leading-relaxed ${isCandy ? 'text-slate-600' : isDark ? 'text-zinc-400' : 'text-emerald-100/70'}`}>
               {t.featClientDesc}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#140722]/85 border border-amber-500/25 hover:border-amber-500/50 transition-colors shadow-md">
-            <div className="w-8 h-8 rounded-lg bg-amber-950/60 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-2.5">
+          <div
+            className={`p-4 rounded-xl transition-colors shadow-md border ${
+              isCandy
+                ? 'bg-white/95 border-amber-200/80 hover:border-amber-400 shadow-amber-100/50'
+                : isDark
+                ? 'bg-[#101422]/90 border-white/10 hover:border-white/25 shadow-black/50'
+                : 'bg-[#140722]/85 border-amber-500/25 hover:border-amber-500/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 border ${
+                isCandy
+                  ? 'bg-amber-100/70 border-amber-200 text-amber-600'
+                  : isDark
+                  ? 'bg-zinc-800/80 border-white/15 text-amber-400'
+                  : 'bg-amber-950/60 border-amber-500/40 text-amber-400'
+              }`}
+            >
               <Zap size={16} />
             </div>
-            <h3 className="text-xs font-bold text-amber-200 mb-1">{t.featSaverTitle}</h3>
-            <p className="text-[11px] text-amber-100/70 leading-relaxed">
+            <h3 className={`text-xs font-bold mb-1 ${isCandy ? 'text-slate-900' : isDark ? 'text-white' : 'text-amber-200'}`}>
+              {t.featSaverTitle}
+            </h3>
+            <p className={`text-[11px] leading-relaxed ${isCandy ? 'text-slate-600' : isDark ? 'text-zinc-400' : 'text-amber-100/70'}`}>
               {t.featSaverDesc}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Halloween Festive Footer - Centered */}
-      <footer className="w-full max-w-5xl mx-auto mt-auto pt-8 pb-4 text-xs font-mono text-orange-300/70 flex flex-wrap items-center justify-between gap-4 border-t border-orange-500/20 relative z-10">
+      {/* Footer */}
+      <footer
+        className={`w-full max-w-5xl mx-auto mt-auto pt-8 pb-4 text-xs font-mono flex flex-wrap items-center justify-between gap-4 border-t relative z-10 ${
+          isCandy
+            ? 'border-pink-200/60 text-slate-500'
+            : isDark
+            ? 'border-white/10 text-zinc-400'
+            : 'border-orange-500/20 text-orange-300/70'
+        }`}
+      >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold text-white">DOCX WEB</span>
+          <span className={`font-semibold ${isCandy ? 'text-slate-900' : 'text-white'}`}>DOCX WEB</span>
           <span>•</span>
-          <span className="text-orange-400 font-semibold">🎃 HALLOWEEN LIMITED EDITION</span>
+          <span
+            className={`font-semibold ${
+              isCandy ? 'text-pink-600' : isDark ? 'text-white' : 'text-orange-400'
+            }`}
+          >
+            {isHalloween ? '🎃 HALLOWEEN LIMITED EDITION' : isCandy ? '🍬 CANDY (WHITE) LIGHT MODE' : '🌙 CLASSIC DARK MODE'}
+          </span>
           <span>•</span>
           <span>{t.versionTag}</span>
         </div>
@@ -1894,7 +2734,13 @@ function Landing({
             href="https://github.com/aplx-renz-sudo/Docx-web-app"
             target="_blank"
             rel="noreferrer"
-            className="text-orange-300/80 hover:text-white transition-colors"
+            className={`transition-colors ${
+              isCandy
+                ? 'text-pink-600 hover:text-pink-800'
+                : isDark
+                ? 'text-zinc-400 hover:text-white'
+                : 'text-orange-300/80 hover:text-white'
+            }`}
           >
             GITHUB REPOSITORY ↗
           </a>
@@ -1977,6 +2823,12 @@ function MessageView({
   onSpeak,
   isSpeaking,
   onEditPrompt,
+  themeMode = 'halloween',
+  isPositionMode,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   message: Message;
   userProfile?: UserProfile | null;
@@ -1985,6 +2837,12 @@ function MessageView({
   onSpeak: () => void;
   isSpeaking?: boolean;
   onEditPrompt?: (text: string) => void;
+  themeMode?: ThemeMode;
+  isPositionMode?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -2040,7 +2898,7 @@ function MessageView({
         </div>
 
         {isThinking ? (
-          <ThinkingIndicator modelName="VileDocx" />
+          <ThinkingIndicator modelName="VileDocx" themeMode={themeMode} />
         ) : isEditing ? (
           <form onSubmit={handleSaveEdit} className="my-2 space-y-2">
             <textarea
@@ -2073,7 +2931,37 @@ function MessageView({
 
         {/* Message Action Tools */}
         {message.content && !isThinking && (
-          <div className="message-tools">
+          <div className="message-tools flex flex-wrap items-center gap-1.5 mt-2">
+            {isPositionMode && (
+              <div
+                className={`message-position-tools flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-mono mr-1 border ${
+                  themeMode === 'candy'
+                    ? 'bg-pink-50 border-pink-200 text-pink-700'
+                    : 'bg-white/10 border-white/15 text-zinc-200'
+                }`}
+              >
+                <span className="opacity-70 text-[10px]">Pos:</span>
+                <button
+                  type="button"
+                  disabled={!canMoveUp}
+                  onClick={onMoveUp}
+                  className="px-1.5 py-0.5 rounded hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center gap-0.5 text-xs"
+                  title="Move message up in conversation"
+                >
+                  <ArrowUp size={11} /> Up
+                </button>
+                <button
+                  type="button"
+                  disabled={!canMoveDown}
+                  onClick={onMoveDown}
+                  className="px-1.5 py-0.5 rounded hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center gap-0.5 text-xs"
+                  title="Move message down in conversation"
+                >
+                  <ArrowDown size={11} /> Down
+                </button>
+              </div>
+            )}
+
             <button onClick={copy} title="Copy text" className="playful-pop">
               {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
               {copied ? 'Copied' : 'Copy'}
@@ -2118,6 +3006,10 @@ function Composer({
   isRecordingVoice,
   onAttachFile,
   onOpenTokenSaver,
+  themeMode,
+  widthClass,
+  alignClass,
+  isFloating,
 }: {
   value: string;
   change: (x: string) => void;
@@ -2131,6 +3023,10 @@ function Composer({
   isRecordingVoice: boolean;
   onAttachFile: () => void;
   onOpenTokenSaver: () => void;
+  themeMode?: ThemeMode;
+  widthClass?: string;
+  alignClass?: string;
+  isFloating?: boolean;
 }) {
   const area = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -2140,28 +3036,68 @@ function Composer({
     el.style.height = `${Math.min(el.scrollHeight, 130)}px`;
   }, [value]);
 
+  const isCandy = themeMode === 'candy';
+
   return (
-    <div className="composer-wrap">
-      <div className="composer">
+    <div
+      className={`composer-wrap ${
+        isFloating ? 'composer-floating-wrap pb-4' : ''
+      } ${
+        isCandy
+          ? 'bg-gradient-to-t from-white via-white/95 to-transparent border-t border-pink-200/40'
+          : ''
+      }`}
+    >
+      <div
+        className={`composer ${widthClass || 'max-w-[768px]'} ${alignClass || 'mx-auto'} ${
+          isFloating ? 'shadow-2xl ring-1 ring-white/10' : ''
+        } ${
+          isCandy
+            ? 'bg-white border-2 border-pink-300 shadow-xl shadow-pink-100/60 focus-within:border-pink-400 focus-within:shadow-pink-200/60'
+            : ''
+        }`}
+        style={{
+          maxWidth: widthClass?.includes('max-w-none')
+            ? '100%'
+            : widthClass?.includes('960px')
+            ? '960px'
+            : widthClass?.includes('640px')
+            ? '640px'
+            : '768px',
+          margin: alignClass?.includes('mr-auto')
+            ? '0 auto 0 0'
+            : alignClass?.includes('ml-auto')
+            ? '0 0 0 auto'
+            : 'auto',
+        }}
+      >
         {/* Helper Action Quick Ribbon */}
         <div className="composer-ribbon">
           <div className="composer-ribbon-left">
             <button
               type="button"
               onClick={onOpenHelp}
-              className="ribbon-pill ribbon-pill-guide playful-pop"
+              className={`ribbon-pill ribbon-pill-guide playful-pop ${
+                isCandy
+                  ? 'bg-white border border-pink-200 hover:border-pink-300 hover:bg-pink-50 text-slate-700 hover:text-pink-600 shadow-xs'
+                  : ''
+              }`}
               title="Interactive Help & Guide Walkthrough"
             >
-              <HelpCircle size={13} className="text-zinc-300" />
+              <HelpCircle size={13} className={isCandy ? 'text-pink-500' : 'text-zinc-300'} />
               <span>Guide & Help</span>
             </button>
             <button
               type="button"
               onClick={onOpenPrompts}
-              className="ribbon-pill ribbon-pill-prompts playful-pop"
+              className={`ribbon-pill ribbon-pill-prompts playful-pop ${
+                isCandy
+                  ? 'bg-white border border-pink-200 hover:border-pink-300 hover:bg-pink-50 text-slate-700 hover:text-pink-600 shadow-xs'
+                  : ''
+              }`}
               title="Prompt Template Library (Ctrl+K)"
             >
-              <Sparkles size={13} className="text-zinc-300" />
+              <Sparkles size={13} className={isCandy ? 'text-pink-500' : 'text-zinc-300'} />
               <span>Prompt Library</span>
             </button>
           </div>
@@ -2169,10 +3105,14 @@ function Composer({
             <button
               type="button"
               onClick={onOpenTokenSaver}
-              className="ribbon-pill ribbon-pill-tokensaver playful-pop"
+              className={`ribbon-pill ribbon-pill-tokensaver playful-pop ${
+                isCandy
+                  ? 'bg-white border border-pink-200 hover:border-pink-300 hover:bg-pink-50 text-slate-700 hover:text-pink-600 shadow-xs'
+                  : ''
+              }`}
               title="Token Saver Optimizer Active"
             >
-              <Zap size={12} className="text-zinc-300" />
+              <Zap size={12} className={isCandy ? 'text-pink-500' : 'text-zinc-300'} />
               <span>Token Saver Active</span>
             </button>
           </div>
@@ -2185,7 +3125,11 @@ function Composer({
               type="button"
               onClick={onAttachFile}
               title="Attach file (text/code/json)"
-              className="playful-pop p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+              className={`playful-pop p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isCandy
+                  ? 'bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-600 border border-pink-200 shadow-xs'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/10'
+              }`}
             >
               <Paperclip size={16} />
             </button>
@@ -2193,7 +3137,11 @@ function Composer({
               type="button"
               onClick={onOpenPrompts}
               title="Open Prompt Library (Ctrl+K)"
-              className="playful-pop p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+              className={`playful-pop p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isCandy
+                  ? 'bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-600 border border-pink-200 shadow-xs'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/10'
+              }`}
             >
               <Sparkles size={16} />
             </button>
@@ -2203,7 +3151,11 @@ function Composer({
               title={isRecordingVoice ? 'Stop voice recording' : 'Dictate with voice'}
               className={`playful-pop p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isRecordingVoice
-                  ? 'bg-white/20 text-white animate-pulse'
+                  ? isCandy
+                    ? 'bg-pink-500 text-white animate-pulse border border-pink-500'
+                    : 'bg-white/20 text-white animate-pulse'
+                  : isCandy
+                  ? 'bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-600 border border-pink-200 shadow-xs'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -2223,21 +3175,42 @@ function Composer({
             }}
             placeholder="Message VileDocx…"
             rows={1}
-            className="flex-1"
+            className={`flex-1 ${isCandy ? 'text-slate-900 placeholder:text-slate-400' : 'text-[#ececec]'}`}
           />
 
           {streaming ? (
-            <button className="send stop playful-pop" onClick={stop} aria-label="Stop generating">
-              <span />
+            <button
+              className={`send stop playful-pop ${
+                isCandy
+                  ? 'bg-white border-2 border-rose-500 text-rose-500 hover:bg-rose-50 shadow-md'
+                  : ''
+              }`}
+              onClick={stop}
+              aria-label="Stop generating"
+            >
+              <span className={isCandy ? 'bg-rose-500' : ''} />
             </button>
           ) : (
-            <button className="send playful-pop" disabled={!value.trim()} onClick={send} aria-label="Send message">
+            <button
+              className={`send playful-pop ${
+                isCandy
+                  ? value.trim()
+                    ? 'bg-white border-2 border-pink-500 text-pink-600 hover:bg-pink-50 shadow-md shadow-pink-200/50 cursor-pointer'
+                    : 'bg-white border border-pink-200 text-pink-300 opacity-60 cursor-not-allowed'
+                  : ''
+              }`}
+              disabled={!value.trim()}
+              onClick={send}
+              aria-label="Send message"
+            >
               <ArrowUp size={18} />
             </button>
           )}
         </div>
       </div>
-      <p>{sendOnEnter ? 'Enter sends · Shift + Enter adds a line' : 'Enter adds a line · Use ↑ to send'}</p>
+      <p className={isCandy ? 'text-slate-500' : ''}>
+        {sendOnEnter ? 'Enter sends · Shift + Enter adds a line' : 'Enter adds a line · Use ↑ to send'}
+      </p>
     </div>
   );
 }
@@ -2259,6 +3232,7 @@ function FullSettingsModal({
   onPrivacy,
   onNavigateToBuild,
   onConnectDeveloper,
+  onOpenPositionEditor,
 }: {
   tab: 'provider' | 'tokensaver' | 'workers' | 'appearance' | 'pets' | 'thinking' | 'persona' | 'languages' | 'privacy' | 'about';
   setTab: (x: typeof tab) => void;
@@ -2276,6 +3250,7 @@ function FullSettingsModal({
   onPrivacy?: () => void;
   onNavigateToBuild?: () => void;
   onConnectDeveloper?: () => void;
+  onOpenPositionEditor?: () => void;
 }) {
   const SECTIONS = [
     {
@@ -2421,6 +3396,7 @@ function FullSettingsModal({
               <AppearanceSettings
                 preferences={preferences}
                 setPreferences={setPreferences}
+                onOpenPositionEditor={onOpenPositionEditor}
               />
             )}
 

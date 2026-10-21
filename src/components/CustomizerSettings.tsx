@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Home,
   Layout,
+  Move,
   ArrowUp,
   CheckCircle2,
   X,
@@ -33,10 +34,14 @@ import {
   AlertTriangle,
   ShieldAlert,
   ChevronRight,
+  Moon,
+  Sun,
+  Ghost,
 } from 'lucide-react';
 import type {
   Preferences,
   ThemePreset,
+  ThemeMode,
   FontPreset,
   BubbleStyle,
   PetId,
@@ -140,9 +145,11 @@ export const PERSONAS: { id: PersonaId; name: string; desc: string; prompt: stri
 export function AppearanceSettings({
   preferences,
   setPreferences,
+  onOpenPositionEditor,
 }: {
   preferences: Preferences;
   setPreferences: (p: Preferences) => void;
+  onOpenPositionEditor?: () => void;
 }) {
   const custom = preferences.customTheme;
   const currentTarget: GradientTarget = custom.enabled
@@ -240,16 +247,148 @@ export function AppearanceSettings({
     });
   };
 
+  const currentThemeMode: ThemeMode = preferences.themeMode || 'halloween';
+
+  const handleSelectThemeMode = (mode: ThemeMode) => {
+    if (preferences.soundEffects) sounds.playComplete();
+    setPreferences({
+      ...preferences,
+      themeMode: mode,
+    });
+  };
+
   return (
     <div className="space-y-10">
-      {/* SECTION 1: HEADER & PLACEMENT TARGET */}
+      {/* SECTION 1: HEADER & THEME MODE SELECTION */}
       <div className="space-y-6 pb-8 border-b border-[#1a2744]">
         <div>
           <div className="section-kicker">THEME & COLOR SCHEME</div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Aesthetic Presets & Atmospheric Gradients</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">Aesthetic Themes & Atmospheric Gradients</h2>
           <p className="lead text-xs text-[#8da0c4] mt-1">
-            Choose a crafted color atmosphere, customize radiant glowing gradients, and choose whether they illuminate the front page or the full app background.
+            Choose your global theme experience, select crafted color atmospheres, or customize glowing gradient placements.
           </p>
+        </div>
+
+        {/* GLOBAL THEME SWITCHER: DARK / HALLOWEEN / CANDY (WHITE) */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0b101e]/90 border border-[#202f50] shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30 mb-1.5">
+                <Sparkles size={11} /> GLOBAL THEME SWITCHER
+              </div>
+              <h3 className="text-base font-bold text-white tracking-tight">Select Theme Experience</h3>
+              <p className="text-xs text-[#8ea0c4] mt-0.5">
+                Switch between the authentic Dark Mode, festive Halloween update, or radiant Candy (White) light mode.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 px-3 py-1 rounded-full w-fit">
+              Active: {currentThemeMode === 'dark' ? '🌙 Dark Mode' : currentThemeMode === 'halloween' ? '🎃 Halloween Edition' : '🍬 Candy (White) Mode'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            {/* 1. DARK */}
+            <button
+              type="button"
+              onClick={() => handleSelectThemeMode('dark')}
+              className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-md active:scale-98 ${
+                currentThemeMode === 'dark'
+                  ? 'border-zinc-300 bg-zinc-900/90 text-white shadow-lg shadow-black/50 ring-2 ring-zinc-300'
+                  : 'border-white/[0.08] bg-[#070b14] text-[#8e9ebc] hover:border-white/[0.2] hover:bg-white/[0.04]'
+              }`}
+            >
+              <div>
+                <div
+                  className="h-10 w-full rounded-lg mb-2.5 flex items-center justify-between px-3 border border-white/10 shadow-inner"
+                  style={{ background: 'linear-gradient(135deg, #050505 0%, #1a1a1a 60%, #ffffff 100%)' }}
+                >
+                  <span className="text-[10px] font-mono font-bold text-white/80 uppercase">Classic Dark</span>
+                  <Moon size={14} className="text-zinc-300" />
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <b className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>🌙</span> Dark
+                  </b>
+                  {currentThemeMode === 'dark' && <CheckCircle2 size={14} className="text-white flex-none" />}
+                </div>
+                <span className="text-[11px] text-[#8da0c4] block mt-1 leading-snug">
+                  The original dark mode we had: clean charcoal canvas, high-contrast monochrome typography, zero holiday decor.
+                </span>
+              </div>
+              <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-[10px] font-mono font-semibold text-zinc-300">
+                <span>{currentThemeMode === 'dark' ? '● CURRENT ACTIVE' : 'Switch to Dark'}</span>
+                <span>↗</span>
+              </div>
+            </button>
+
+            {/* 2. HALLOWEEN */}
+            <button
+              type="button"
+              onClick={() => handleSelectThemeMode('halloween')}
+              className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-md active:scale-98 ${
+                currentThemeMode === 'halloween'
+                  ? 'border-orange-400 bg-[#1d0a33] text-orange-100 shadow-lg shadow-orange-950/50 ring-2 ring-orange-500'
+                  : 'border-white/[0.08] bg-[#070b14] text-[#8e9ebc] hover:border-white/[0.2] hover:bg-white/[0.04]'
+              }`}
+            >
+              <div>
+                <div
+                  className="h-10 w-full rounded-lg mb-2.5 flex items-center justify-between px-3 border border-orange-500/30 shadow-inner"
+                  style={{ background: 'linear-gradient(135deg, #220b38 0%, #ff7a00 65%, #a855f7 100%)' }}
+                >
+                  <span className="text-[10px] font-mono font-bold text-orange-100 uppercase">Spooky Update</span>
+                  <Ghost size={14} className="text-orange-200" />
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <b className="text-xs font-bold text-orange-200 flex items-center gap-1.5">
+                    <span>🎃</span> Halloween
+                  </b>
+                  {currentThemeMode === 'halloween' && <CheckCircle2 size={14} className="text-orange-400 flex-none" />}
+                </div>
+                <span className="text-[11px] text-[#8da0c4] block mt-1 leading-snug">
+                  Spooky purple & orange atmosphere, companion pets wearing cute pumpkin armor, and haunted cauldron fx.
+                </span>
+              </div>
+              <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-[10px] font-mono font-semibold text-orange-300">
+                <span>{currentThemeMode === 'halloween' ? '● CURRENT ACTIVE' : 'Switch to Halloween'}</span>
+                <span>↗</span>
+              </div>
+            </button>
+
+            {/* 3. CANDY (WHITE) */}
+            <button
+              type="button"
+              onClick={() => handleSelectThemeMode('candy')}
+              className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-md active:scale-98 ${
+                currentThemeMode === 'candy'
+                  ? 'border-pink-400 bg-pink-500/15 text-pink-100 shadow-lg shadow-pink-500/20 ring-2 ring-pink-400'
+                  : 'border-white/[0.08] bg-[#070b14] text-[#8e9ebc] hover:border-white/[0.2] hover:bg-white/[0.04]'
+              }`}
+            >
+              <div>
+                <div
+                  className="h-10 w-full rounded-lg mb-2.5 flex items-center justify-between px-3 border border-pink-300 shadow-inner"
+                  style={{ background: 'linear-gradient(135deg, #ffffff 0%, #ff70a6 55%, #ffd166 100%)' }}
+                >
+                  <span className="text-[10px] font-mono font-bold text-slate-800 uppercase">Candy Light</span>
+                  <Sun size={14} className="text-amber-500" />
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <b className="text-xs font-bold text-pink-200 flex items-center gap-1.5">
+                    <span>🍬</span> Candy (White)
+                  </b>
+                  {currentThemeMode === 'candy' && <CheckCircle2 size={14} className="text-pink-400 flex-none" />}
+                </div>
+                <span className="text-[11px] text-[#8da0c4] block mt-1 leading-snug">
+                  Radiant white canvas with pinkish-yellow gradients on landing, light mode in chat and settings everywhere.
+                </span>
+              </div>
+              <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-[10px] font-mono font-semibold text-pink-300">
+                <span>{currentThemeMode === 'candy' ? '● CURRENT ACTIVE' : 'Switch to Candy (White)'}</span>
+                <span>↗</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* GRADIENT PLACEMENT TARGET SELECTOR (TACTILE BUTTONS) */}
@@ -327,6 +466,48 @@ export function AppearanceSettings({
                 <b className="text-xs font-bold block truncate text-[#f5f5f7]">Both (Full App)</b>
                 <span className="text-[10.5px] text-[#788bb0] block truncate">Landing page + workspace</span>
               </div>
+            </button>
+          </div>
+        </div>
+
+        {/* SECTION 1.5: MAIN CHAT POSITIONS & LAYOUT */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0b101e]/90 border border-[#202f50] shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-pink-500/15 text-pink-300 border border-pink-500/30 mb-1.5">
+                <Move size={11} /> CHAT WORKSPACE POSITIONS
+              </div>
+              <h3 className="text-base font-bold text-white tracking-tight">Main Chat Layout & Custom Positions</h3>
+              <p className="text-xs text-[#8ea0c4] mt-0.5">
+                Customize the arrangement, docking (Top, Bottom, or Floating), width, and alignment of the chat workspace. Edits are saved on user side only.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1 flex-wrap">
+            {onOpenPositionEditor && (
+              <button
+                type="button"
+                onClick={onOpenPositionEditor}
+                className="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-98"
+              >
+                <Move size={14} />
+                <span>Launch Position Editor in Chat</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem('viledocx_chat_positions_v1');
+                  window.location.reload();
+                } catch {}
+              }}
+              className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-zinc-300 transition-all cursor-pointer flex items-center gap-1.5"
+              title="Reset saved positions to default layout"
+            >
+              <RotateCcw size={13} />
+              <span>Reset Positions to Defaults</span>
             </button>
           </div>
         </div>

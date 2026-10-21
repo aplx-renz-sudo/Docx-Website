@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowUp, KeyRound, Terminal } from 'lucide-react';
+import type { ThemeMode } from '../types';
 
 interface CelestialCatTreeHeroProps {
   onLaunch: () => void;
@@ -8,6 +9,7 @@ interface CelestialCatTreeHeroProps {
   launchLabel: string;
   settingsLabel: string;
   guideLabel?: string;
+  themeMode?: ThemeMode;
 }
 
 /**
@@ -24,6 +26,7 @@ export function CelestialCatTreeHero({
   launchLabel,
   settingsLabel,
   guideLabel = 'Interactive Guide',
+  themeMode = 'halloween',
 }: CelestialCatTreeHeroProps) {
   const [purrToast, setPurrToast] = useState<string | null>(null);
   const [catHearts, setCatHearts] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -337,31 +340,41 @@ export function CelestialCatTreeHero({
               {/* Back body mass */}
               <ellipse cx="460" cy="74" rx="26" ry="17" fill="url(#celestial-cat-fur)" />
 
-              {/* Cat WEARING the Pumpkin Costume Suit */}
-              <g className="cat-pumpkin-suit-on-tree">
-                {/* Pumpkin outer lobes */}
-                <ellipse cx="440" cy="74" rx="13" ry="16" fill="url(#cat-pumpkin-body)" />
-                <ellipse cx="464" cy="74" rx="13" ry="16" fill="url(#cat-pumpkin-body)" />
-                {/* Pumpkin center tummy lobe */}
-                <ellipse cx="452" cy="75" rx="14" ry="17" fill="url(#cat-pumpkin-body)" stroke="#d84315" strokeWidth="0.4" />
+              {/* Cat WEARING the Pumpkin Costume Suit only in Halloween mode */}
+              {themeMode === 'halloween' ? (
+                <g className="cat-pumpkin-suit-on-tree">
+                  {/* Pumpkin outer lobes */}
+                  <ellipse cx="440" cy="74" rx="13" ry="16" fill="url(#cat-pumpkin-body)" />
+                  <ellipse cx="464" cy="74" rx="13" ry="16" fill="url(#cat-pumpkin-body)" />
+                  {/* Pumpkin center tummy lobe */}
+                  <ellipse cx="452" cy="75" rx="14" ry="17" fill="url(#cat-pumpkin-body)" stroke="#d84315" strokeWidth="0.4" />
 
-                {/* Grooves on pumpkin costume */}
-                <path d="M 445 60 Q 440 75 445 88" stroke="#8a1c00" strokeWidth="0.8" fill="none" opacity="0.45" />
-                <path d="M 460 60 Q 465 75 460 88" stroke="#8a1c00" strokeWidth="0.8" fill="none" opacity="0.45" />
+                  {/* Grooves on pumpkin costume */}
+                  <path d="M 445 60 Q 440 75 445 88" stroke="#8a1c00" strokeWidth="0.8" fill="none" opacity="0.45" />
+                  <path d="M 460 60 Q 465 75 460 88" stroke="#8a1c00" strokeWidth="0.8" fill="none" opacity="0.45" />
 
-                {/* Carved smiling sleeping jack-o'-lantern face on the pumpkin tummy */}
-                <g filter="url(#moon-soft-glow)">
-                  <path d="M 444 71 Q 447 73 450 71" stroke="#ffb300" strokeWidth="1" strokeLinecap="round" fill="none" />
-                  <path d="M 454 71 Q 457 73 460 71" stroke="#ffb300" strokeWidth="1" strokeLinecap="round" fill="none" />
-                  <polygon points="452,73 450.5,75 453.5,75" fill="#ffe082" />
-                  <path d="M 447 77 Q 452 81 457 77" stroke="#ffb300" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                  {/* Carved smiling sleeping jack-o'-lantern face on the pumpkin tummy */}
+                  <g filter="url(#moon-soft-glow)">
+                    <path d="M 444 71 Q 447 73 450 71" stroke="#ffb300" strokeWidth="1" strokeLinecap="round" fill="none" />
+                    <path d="M 454 71 Q 457 73 460 71" stroke="#ffb300" strokeWidth="1" strokeLinecap="round" fill="none" />
+                    <polygon points="452,73 450.5,75 453.5,75" fill="#ffe082" />
+                    <path d="M 447 77 Q 452 81 457 77" stroke="#ffb300" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                  </g>
+
+                  {/* Cute green leaf collar where the cat's neck emerges */}
+                  <path d="M 432 63 Q 428 58 435 56 Q 436 62 432 63 Z" fill="#4caf50" stroke="#1b5e20" strokeWidth="0.4" />
+                  <path d="M 435 68 Q 428 69 432 74 Q 436 71 435 68 Z" fill="#4caf50" stroke="#1b5e20" strokeWidth="0.4" />
+                  <path d="M 430 63 Q 422 64 426 69 Q 431 66 430 63 Z" fill="#81c784" stroke="#1b5e20" strokeWidth="0.4" />
                 </g>
-
-                {/* Cute green leaf collar where the cat's neck emerges */}
-                <path d="M 432 63 Q 428 58 435 56 Q 436 62 432 63 Z" fill="#4caf50" stroke="#1b5e20" strokeWidth="0.4" />
-                <path d="M 435 68 Q 428 69 432 74 Q 436 71 435 68 Z" fill="#4caf50" stroke="#1b5e20" strokeWidth="0.4" />
-                <path d="M 430 63 Q 422 64 426 69 Q 431 66 430 63 Z" fill="#81c784" stroke="#1b5e20" strokeWidth="0.4" />
-              </g>
+              ) : (
+                /* Natural Starry Sleeping Fur Pattern in Dark & Candy mode */
+                <g className="cat-natural-fur-pattern">
+                  <circle cx="448" cy="73" r="1.8" fill={themeMode === 'candy' ? '#ffd166' : '#38bdf8'} filter="url(#moon-soft-glow)" />
+                  <circle cx="462" cy="76" r="1.4" fill={themeMode === 'candy' ? '#f472b6' : '#c084fc'} />
+                  <circle cx="456" cy="68" r="1.2" fill="#ffffff" />
+                  <path d="M 442 70 Q 445 74 448 70" stroke={themeMode === 'candy' ? '#f472b6' : '#818cf8'} strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.6" />
+                </g>
+              )}
 
               {/* Cat's Sleeping Head resting snugly on the branch */}
               <circle cx="418" cy="70" r="16" fill="url(#celestial-cat-fur)" />
@@ -403,12 +416,21 @@ export function CelestialCatTreeHero({
               <ellipse cx="414" cy="85" rx="5" ry="3.5" fill="#fdf4ff" stroke="#c084fc" strokeWidth="0.5" />
               <ellipse cx="426" cy="85" rx="5" ry="3.5" fill="#fdf4ff" stroke="#c084fc" strokeWidth="0.5" />
 
-              {/* Tiny green pumpkin vine sprout clip on cat's left ear */}
-              <g transform="translate(412, 45) scale(0.68) rotate(-10)">
-                <path d="M 0 0 C -2 -4 -5 -6 -3 -10 C -1 -13 3 -12 2 -8 Z" fill="#2e7d32" />
-                <path d="M 0 -4 C -5 -7 -8 -6 -7 -2 C -6 2 -1 0 0 -4 Z" fill="#4caf50" />
-                <ellipse cx="0" cy="1" rx="2.5" ry="1.2" fill="#ff7043" />
-              </g>
+              {themeMode === 'halloween' && (
+                /* Tiny green pumpkin vine sprout clip on cat's left ear */
+                <g transform="translate(412, 45) scale(0.68) rotate(-10)">
+                  <path d="M 0 0 C -2 -4 -5 -6 -3 -10 C -1 -13 3 -12 2 -8 Z" fill="#2e7d32" />
+                  <path d="M 0 -4 C -5 -7 -8 -6 -7 -2 C -6 2 -1 0 0 -4 Z" fill="#4caf50" />
+                  <ellipse cx="0" cy="1" rx="2.5" ry="1.2" fill="#ff7043" />
+                </g>
+              )}
+              {themeMode === 'candy' && (
+                /* Cute tiny sugar candy pin on ear */
+                <g transform="translate(412, 45) scale(0.7) rotate(-5)">
+                  <circle cx="0" cy="0" r="3" fill="#f472b6" />
+                  <circle cx="0" cy="0" r="1.2" fill="#fef08a" />
+                </g>
+              )}
             </g>
 
             {/* Floating Animated "Zzz" Letters */}
@@ -507,10 +529,16 @@ export function CelestialCatTreeHero({
           {/* 1. "Launch workspace" Button */}
           <div className="relative flex-1 min-w-[200px]">
             <button
-              className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs tracking-wider uppercase inline-flex items-center justify-center gap-2 shadow-2xl shadow-orange-500/30 transition-all cursor-pointer active:scale-95 border border-orange-400/50 hover:border-orange-300"
+              className={`w-full px-6 py-4 rounded-xl font-extrabold text-xs tracking-wider uppercase inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 border ${
+                themeMode === 'halloween'
+                  ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-black shadow-2xl shadow-orange-500/30 border-orange-400/50 hover:border-orange-300'
+                  : themeMode === 'candy'
+                  ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-400 hover:from-pink-400 hover:to-amber-300 text-white shadow-2xl shadow-pink-500/30 border-pink-400/50 hover:border-pink-300'
+                  : 'bg-white hover:bg-zinc-200 text-black shadow-2xl shadow-white/10 border-white/60'
+              }`}
               onClick={onLaunch}
             >
-              <span>{launchLabel} 🎃</span>
+              <span>{launchLabel} {themeMode === 'halloween' ? '🎃' : themeMode === 'candy' ? '🍬' : '⚡'}</span>
               <ArrowUp size={15} style={{ transform: 'rotate(45deg)' }} />
             </button>
 
@@ -529,24 +557,30 @@ export function CelestialCatTreeHero({
               />
               <path
                 d="M 5 35 Q 2 20 8 10 Q 14 5 18 12 Q 12 25 25 28 Q 38 30 52 35"
-                stroke="#c084fc"
+                stroke={themeMode === 'candy' ? '#f472b6' : '#c084fc'}
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 fill="none"
               />
-              {/* Little green sprout on the root */}
+              {/* Little sprout / spore on root */}
               <path d="M 12 12 Q 7 5 11 2 Q 17 6 12 12 Z" fill="#4caf50" stroke="#1b5e20" strokeWidth="0.4" />
-              <circle cx="8" cy="10" r="2" fill="#fef08a" />
+              <circle cx="8" cy="10" r="2" fill={themeMode === 'candy' ? '#fde047' : '#fef08a'} />
             </svg>
           </div>
 
           {/* 2. "Configure API Keys" Button */}
           <div className="relative flex-1 min-w-[200px]">
             <button
-              className="w-full px-5 py-4 rounded-xl bg-[#1d0a33] hover:bg-[#2a0e4b] border border-orange-500/35 hover:border-orange-400 text-orange-100 font-semibold text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xl shadow-purple-950/40"
+              className={`w-full px-5 py-4 rounded-xl font-semibold text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xl ${
+                themeMode === 'halloween'
+                  ? 'bg-[#1d0a33] hover:bg-[#2a0e4b] border border-orange-500/35 hover:border-orange-400 text-orange-100 shadow-purple-950/40'
+                  : themeMode === 'candy'
+                  ? 'bg-white hover:bg-pink-50/70 border border-pink-200/90 hover:border-pink-300 text-slate-800 shadow-pink-100/60'
+                  : 'bg-[#11131a] hover:bg-[#181b24] border border-white/15 hover:border-white/30 text-zinc-200 shadow-black/50'
+              }`}
               onClick={onSettings}
             >
-              <KeyRound size={15} className="text-orange-300" />
+              <KeyRound size={15} className={themeMode === 'candy' ? 'text-pink-500' : themeMode === 'halloween' ? 'text-orange-300' : 'text-zinc-400'} />
               <span>{settingsLabel}</span>
             </button>
 
@@ -564,13 +598,13 @@ export function CelestialCatTreeHero({
               />
               <path
                 d="M 2 18 Q 20 8 35 14 Q 50 20 68 12"
-                stroke="#d946ef"
+                stroke={themeMode === 'candy' ? '#f472b6' : '#d946ef'}
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 fill="none"
                 opacity="0.8"
               />
-              <circle cx="35" cy="14" r="2.2" fill="#38bdf8" />
+              <circle cx="35" cy="14" r="2.2" fill={themeMode === 'candy' ? '#ffd166' : '#38bdf8'} />
             </svg>
           </div>
 
@@ -578,10 +612,16 @@ export function CelestialCatTreeHero({
           {onOpenGuide && (
             <div className="relative flex-1 min-w-[200px]">
               <button
-                className="w-full px-5 py-4 rounded-xl bg-purple-950/45 hover:bg-purple-900/60 border border-purple-500/40 hover:border-purple-300 text-purple-200 hover:text-white font-semibold text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xl shadow-purple-950/40"
+                className={`w-full px-5 py-4 rounded-xl font-semibold text-xs tracking-wider inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xl ${
+                  themeMode === 'halloween'
+                    ? 'bg-purple-950/45 hover:bg-purple-900/60 border border-purple-500/40 hover:border-purple-300 text-purple-200 hover:text-white shadow-purple-950/40'
+                    : themeMode === 'candy'
+                    ? 'bg-white hover:bg-amber-50/70 border border-amber-200/90 hover:border-amber-300 text-slate-800 hover:text-slate-900 shadow-amber-100/60'
+                    : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/15 hover:border-white/30 text-zinc-300 hover:text-white shadow-black/50'
+                }`}
                 onClick={onOpenGuide}
               >
-                <Terminal size={15} className="text-purple-300" />
+                <Terminal size={15} className={themeMode === 'candy' ? 'text-amber-500' : themeMode === 'halloween' ? 'text-purple-300' : 'text-zinc-400'} />
                 <span>{guideLabel}</span>
               </button>
 

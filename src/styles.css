@@ -1946,3 +1946,567 @@ footer a:hover {
 .animate-root-spore {
   animation: root-spore-glow 2.8s ease-in-out infinite;
 }
+
+/* ============================================================
+   Candy (White) Light Mode System — Everywhere Light Mode
+   White landing with pinkish-yellow gradients, light chat,
+   and light settings.
+   ============================================================ */
+.app.theme-mode-candy,
+.app.candy-mode,
+.theme-mode-candy {
+  --candy-pink: #ec4899;
+  --candy-pink-light: #fdf2f8;
+  --candy-yellow: #f59e0b;
+  --candy-yellow-light: #fefce8;
+  --candy-card: #ffffff;
+  --candy-border: rgba(244, 114, 182, 0.28);
+  --glass-bg: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(244, 114, 182, 0.25);
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Candy Canvas & Spaces */
+.theme-mode-candy .space {
+  background: radial-gradient(circle at 50% 12%, rgba(255, 182, 193, 0.45) 0%, rgba(254, 240, 138, 0.35) 45%, #ffffff 80%) !important;
+}
+
+.theme-mode-candy .workspace-container,
+.theme-mode-candy .chat-view {
+  background: transparent !important;
+  color: #0f172a !important;
+}
+
+/* Candy Chat Sidebar */
+.theme-mode-candy .sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid rgba(244, 114, 182, 0.25) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy .sidebar button,
+.theme-mode-candy .sidebar a,
+.theme-mode-candy .sidebar span,
+.theme-mode-candy .sidebar p {
+  color: #334155 !important;
+}
+.theme-mode-candy .sidebar .new-chat {
+  background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3) !important;
+}
+.theme-mode-candy .sidebar .new-chat * {
+  color: #ffffff !important;
+}
+.theme-mode-candy .sidebar .history:hover,
+.theme-mode-candy .sidebar button:hover {
+  background: rgba(253, 242, 248, 0.95) !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy .sidebar .history.active {
+  background: #fdf2f8 !important;
+  border-left: 3px solid #ec4899 !important;
+  color: #be185d !important;
+}
+
+/* Candy Chat Header */
+.theme-mode-candy header,
+.theme-mode-candy main.chat header,
+.theme-mode-candy .chat-header,
+.light-mode header,
+.light-mode main.chat header,
+.light-mode .chat-header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(244, 114, 182, 0.25) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy header *,
+.theme-mode-candy main.chat header *,
+.light-mode header *,
+.light-mode main.chat header * {
+  color: #1e293b;
+}
+
+/* Candy Chat Area Buttons & Controls (Fully White) */
+.theme-mode-candy main.chat header button,
+.theme-mode-candy main.chat header a,
+.theme-mode-candy main.chat header .icon,
+.theme-mode-candy main.chat header .model,
+.theme-mode-candy main.chat header .profile-avatar-btn,
+.light-mode main.chat header button,
+.light-mode main.chat header a,
+.light-mode main.chat header .icon,
+.light-mode main.chat header .model,
+.light-mode main.chat header .profile-avatar-btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #1e293b !important;
+  box-shadow: 0 2px 6px rgba(244, 114, 182, 0.1) !important;
+}
+.theme-mode-candy main.chat header button:hover,
+.theme-mode-candy main.chat header a:hover,
+.theme-mode-candy main.chat header .icon:hover,
+.light-mode main.chat header button:hover,
+.light-mode main.chat header a:hover,
+.light-mode main.chat header .icon:hover {
+  background: #fdf2f8 !important;
+  border-color: #f472b6 !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy main.chat header button svg,
+.theme-mode-candy main.chat header a svg,
+.theme-mode-candy main.chat header .icon svg,
+.light-mode main.chat header button svg,
+.light-mode main.chat header a svg,
+.light-mode main.chat header .icon svg {
+  color: #ec4899 !important;
+}
+
+/* Candy Chat Messages & Bubbles */
+.theme-mode-candy .messages,
+.light-mode .messages {
+  color: #0f172a !important;
+}
+.theme-mode-candy .message.user .user-bubble-content,
+.theme-mode-candy .message.user .message-body > p,
+.theme-mode-candy .message.user .message-body > div.user-bubble,
+.light-mode .message.user .user-bubble-content,
+.light-mode .message.user .message-body > p,
+.light-mode .message.user .message-body > div.user-bubble {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25) !important;
+}
+.theme-mode-candy .message.user .user-bubble-content p,
+.theme-mode-candy .message.user .user-bubble-content *,
+.light-mode .message.user .user-bubble-content p,
+.light-mode .message.user .user-bubble-content * {
+  color: #ffffff !important;
+}
+
+.theme-mode-candy .message.model,
+.light-mode .message.model {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.25) !important;
+  border-radius: 20px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.08) !important;
+}
+.theme-mode-candy .message.model .model-content,
+.theme-mode-candy .message.model .message-body p,
+.theme-mode-candy .message-body p,
+.light-mode .message.model .model-content,
+.light-mode .message.model .message-body p,
+.light-mode .message-body p {
+  color: #0f172a !important;
+}
+.theme-mode-candy .message .avatar,
+.light-mode .message .avatar {
+  background: #fff0f5 !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.45) !important;
+  color: #db2777 !important;
+}
+
+/* Code Blocks in Candy Light Mode */
+.theme-mode-candy .message-body pre,
+.light-mode .message-body pre {
+  background: #0f172a !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+}
+.theme-mode-candy .message-body pre code,
+.light-mode .message-body pre code {
+  color: #f8fafc !important;
+}
+.theme-mode-candy .message-body code,
+.light-mode .message-body code {
+  background: #fdf2f8 !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #be185d !important;
+}
+
+/* Candy Composer Wrap & Input Box (Selector 1 - Pure White) */
+.theme-mode-candy .composer-wrap,
+.light-mode .composer-wrap {
+  background: linear-gradient(to top, #ffffff 88%, rgba(255, 255, 255, 0)) !important;
+  border-top: 1px solid rgba(244, 114, 182, 0.25) !important;
+}
+.theme-mode-candy .composer,
+.light-mode .composer {
+  background: #ffffff !important;
+  border: 2px solid rgba(244, 114, 182, 0.35) !important;
+  box-shadow: 0 10px 35px rgba(244, 114, 182, 0.16) !important;
+}
+.theme-mode-candy .composer textarea,
+.light-mode .composer textarea {
+  color: #0f172a !important;
+  background: transparent !important;
+}
+.theme-mode-candy .composer textarea::placeholder,
+.light-mode .composer textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* All Buttons in Chat Composer Ribbon & Tools (Pure White) */
+.theme-mode-candy .ribbon-pill,
+.theme-mode-candy .ribbon-pill-guide,
+.theme-mode-candy .ribbon-pill-prompts,
+.theme-mode-candy .ribbon-pill-build,
+.theme-mode-candy .ribbon-pill-tokensaver,
+.light-mode .ribbon-pill,
+.light-mode .ribbon-pill-guide,
+.light-mode .ribbon-pill-prompts,
+.light-mode .ribbon-pill-build,
+.light-mode .ribbon-pill-tokensaver {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #334155 !important;
+  box-shadow: 0 2px 6px rgba(244, 114, 182, 0.08) !important;
+}
+.theme-mode-candy .ribbon-pill:hover,
+.light-mode .ribbon-pill:hover {
+  background: #fdf2f8 !important;
+  border-color: #f472b6 !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy .composer button,
+.light-mode .composer button {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #ec4899 !important;
+  box-shadow: 0 1px 4px rgba(244, 114, 182, 0.08) !important;
+}
+.theme-mode-candy .composer button:hover,
+.light-mode .composer button:hover {
+  background: #fdf2f8 !important;
+  border-color: #f472b6 !important;
+  color: #db2777 !important;
+}
+
+.theme-mode-candy button.send,
+.light-mode button.send {
+  background: #ffffff !important;
+  border: 2px solid #ec4899 !important;
+  color: #ec4899 !important;
+  box-shadow: 0 3px 12px rgba(236, 72, 153, 0.25) !important;
+}
+.theme-mode-candy button.send:hover:not(:disabled),
+.light-mode button.send:hover:not(:disabled) {
+  background: #fdf2f8 !important;
+  color: #db2777 !important;
+  border-color: #db2777 !important;
+}
+.theme-mode-candy button.send:disabled,
+.light-mode button.send:disabled {
+  background: #ffffff !important;
+  border: 1px solid #fbcfe8 !important;
+  color: #cbd5e1 !important;
+  opacity: 0.7 !important;
+}
+
+/* Prompt Deck Buttons & Message Action Buttons in Candy Mode (Pure White) */
+.theme-mode-candy .prompt-deck button,
+.light-mode .prompt-deck button,
+.theme-mode-candy .message-tools button,
+.light-mode .message-tools button {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #334155 !important;
+  box-shadow: 0 2px 8px rgba(244, 114, 182, 0.08) !important;
+}
+.theme-mode-candy .prompt-deck button:hover,
+.light-mode .prompt-deck button:hover,
+.theme-mode-candy .message-tools button:hover,
+.light-mode .message-tools button:hover {
+  background: #fdf2f8 !important;
+  border-color: #f472b6 !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy .prompt-deck button b,
+.light-mode .prompt-deck button b {
+  color: #0f172a !important;
+}
+.theme-mode-candy .prompt-deck button span,
+.light-mode .prompt-deck button span {
+  color: #64748b !important;
+}
+
+/* Candy Settings Modal & Panels */
+.theme-mode-candy .settings-modal,
+.theme-mode-candy .customizer-view,
+.theme-mode-candy .modal-content,
+.theme-mode-candy .settings-container {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 60px rgba(244, 114, 182, 0.25) !important;
+}
+.theme-mode-candy .settings-nav {
+  background: #fdf8fa !important;
+  border-right: 1px solid rgba(244, 114, 182, 0.2) !important;
+}
+.theme-mode-candy .settings-nav button {
+  color: #475569 !important;
+}
+.theme-mode-candy .settings-nav button:hover {
+  background: #fce7f3 !important;
+  color: #be185d !important;
+}
+.theme-mode-candy .settings-nav button.active {
+  background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.25) !important;
+}
+.theme-mode-candy .settings-content {
+  background: #ffffff !important;
+}
+.theme-mode-candy .settings-panel,
+.theme-mode-candy .settings-card,
+.theme-mode-candy .field-card {
+  background: #fffcfd !important;
+  border: 1px solid rgba(244, 114, 182, 0.22) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-card b,
+.theme-mode-candy .settings-card strong,
+.theme-mode-candy .settings-panel h2,
+.theme-mode-candy .settings-panel h3 {
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-card p,
+.theme-mode-candy .settings-card span {
+  color: #475569;
+}
+.theme-mode-candy input,
+.theme-mode-candy select,
+.theme-mode-candy textarea {
+  background: #ffffff !important;
+  border: 1px solid #fbcfe8 !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy input:focus,
+.theme-mode-candy select:focus,
+.theme-mode-candy textarea:focus {
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25) !important;
+}
+
+/* Prompt Library, Account, About & Privacy Modals in Candy Mode */
+.theme-mode-candy .about-container,
+.theme-mode-candy .privacy-container,
+.theme-mode-candy .prompt-library-modal,
+.theme-mode-candy .offline-account-modal {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy .about-container *,
+.theme-mode-candy .privacy-container *,
+.theme-mode-candy .prompt-library-modal *,
+.theme-mode-candy .offline-account-modal * {
+  color: #1e293b;
+}
+
+/* Comprehensive Settings Hub in Candy (White) Light Mode */
+.theme-mode-candy .settings-page,
+.light-mode .settings-page {
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 182, 193, 0.45) 0%, rgba(254, 240, 138, 0.35) 35%, transparent 75%),
+    linear-gradient(180deg, #fff7f9 0%, #ffffff 40%, #fffdfa 100%) !important;
+  color: #0f172a !important;
+}
+
+.theme-mode-candy .settings-page::before,
+.light-mode .settings-page::before {
+  background: radial-gradient(circle at 50% 15%, rgba(244, 114, 182, 0.22), transparent 60%) !important;
+}
+
+.theme-mode-candy .settings-header,
+.light-mode .settings-header {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid rgba(244, 114, 182, 0.25) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-header .back,
+.light-mode .settings-header .back {
+  background: #fff0f5 !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy .settings-header .back:hover,
+.light-mode .settings-header .back:hover {
+  background: #fce7f3 !important;
+  color: #be185d !important;
+}
+.theme-mode-candy .settings-header .wordmark,
+.light-mode .settings-header .wordmark {
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-header .web-pill,
+.light-mode .settings-header .web-pill {
+  color: #db2777 !important;
+}
+.theme-mode-candy .settings-header .web-pill i,
+.light-mode .settings-header .web-pill i {
+  background: #ec4899 !important;
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.6) !important;
+}
+
+.theme-mode-candy .settings-nav,
+.light-mode .settings-nav {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(244, 114, 182, 0.25) !important;
+  box-shadow: 0 10px 35px rgba(244, 114, 182, 0.12) !important;
+}
+.theme-mode-candy .settings-nav-section-title,
+.light-mode .settings-nav-section-title {
+  color: #db2777 !important;
+}
+.theme-mode-candy .settings-tab-btn,
+.light-mode .settings-tab-btn {
+  color: #334155 !important;
+}
+.theme-mode-candy .settings-tab-btn:hover,
+.light-mode .settings-tab-btn:hover {
+  background: #fdf2f8 !important;
+  color: #db2777 !important;
+}
+.theme-mode-candy .settings-tab-btn.selected,
+.light-mode .settings-tab-btn.selected {
+  background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.32) !important;
+}
+.theme-mode-candy .settings-tab-btn.selected *,
+.light-mode .settings-tab-btn.selected * {
+  color: #ffffff !important;
+}
+
+.theme-mode-candy .settings-content,
+.light-mode .settings-content {
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-content > div,
+.light-mode .settings-content > div {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.25) !important;
+  box-shadow: 0 20px 50px rgba(244, 114, 182, 0.1) !important;
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-content h1,
+.theme-mode-candy .settings-content h2,
+.theme-mode-candy .settings-content h3,
+.light-mode .settings-content h1,
+.light-mode .settings-content h2,
+.light-mode .settings-content h3 {
+  color: #0f172a !important;
+}
+.theme-mode-candy .settings-content .lead,
+.light-mode .settings-content .lead {
+  color: #475569 !important;
+}
+.theme-mode-candy .settings-content .section-kicker,
+.light-mode .settings-content .section-kicker {
+  color: #db2777 !important;
+}
+
+/* Light Mode Overrides for internal dark cards in settings in Candy Mode */
+.theme-mode-candy .settings-content [class*="bg-[#0b101e]"],
+.theme-mode-candy .settings-content [class*="bg-[#070b14]"],
+.theme-mode-candy .settings-content [class*="bg-[#090e1b]"],
+.theme-mode-candy .settings-content [class*="bg-[#0a0f1d]"],
+.theme-mode-candy .settings-content [class*="bg-[#11192e]"],
+.theme-mode-candy .settings-content [class*="bg-[#121a30]"],
+.theme-mode-candy .settings-content [class*="bg-[#101422]"],
+.theme-mode-candy .settings-content [class*="bg-[#121622]"],
+.theme-mode-candy .settings-content [class*="bg-[#181818]"],
+.theme-mode-candy .settings-content [class*="bg-[#1a1a1a]"],
+.theme-mode-candy .settings-content [class*="bg-[#242424]"],
+.theme-mode-candy .settings-content [class*="bg-[#141b2d]"] {
+  background-color: #fff9fb !important;
+  border-color: rgba(244, 114, 182, 0.22) !important;
+  color: #1e293b;
+}
+
+.theme-mode-candy .settings-content [class*="text-white"],
+.theme-mode-candy .settings-content [class*="text-zinc-100"],
+.theme-mode-candy .settings-content [class*="text-zinc-200"],
+.theme-mode-candy .settings-content [class*="text-zinc-300"] {
+  color: #1e293b !important;
+}
+
+.theme-mode-candy .settings-content [class*="text-[#8da0c4]"],
+.theme-mode-candy .settings-content [class*="text-[#8ea0c4]"],
+.theme-mode-candy .settings-content [class*="text-[#7d93be]"],
+.theme-mode-candy .settings-content [class*="text-[#7f94be]"],
+.theme-mode-candy .settings-content [class*="text-zinc-400"] {
+  color: #64748b !important;
+}
+
+/* Main Chat Position & Layout Customizer */
+.messages.messages-flow-left .message.user {
+  justify-content: flex-start;
+}
+.messages.messages-flow-left .user-bubble-content {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.composer-floating-wrap {
+  position: sticky;
+  bottom: 12px;
+  background: transparent !important;
+  z-index: 30;
+  padding-bottom: 8px;
+}
+.theme-mode-candy .composer-floating-wrap {
+  background: transparent !important;
+}
+
+.message-position-tools button {
+  transition: all 0.15s ease;
+}
+
+/* Candy Shifting Gradient Button */
+.candy-shifting-btn {
+  background: linear-gradient(135deg, #ec4899 0%, #f59e0b 50%, #db2777 100%) !important;
+  background-size: 200% 200% !important;
+  animation: candyShiftingGradient 6s ease infinite;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.25) !important;
+}
+.candy-shifting-btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35) !important;
+}
+
+@keyframes candyShiftingGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.theme-mode-candy .candy-thinking,
+.light-mode .candy-thinking {
+  background: #ffffff !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px rgba(244, 114, 182, 0.15) !important;
+}
+.theme-mode-candy .candy-thinking span,
+.light-mode .candy-thinking span {
+  color: #334155 !important;
+}
+
+

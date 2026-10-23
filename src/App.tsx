@@ -76,6 +76,7 @@ import { TokenSaverBadge } from './components/TokenSaverBadge';
 import { SwarmMetricsHeaderWidget } from './components/SwarmMetricsHeaderWidget';
 import { CodeBlock } from './components/CodeBlock';
 import { GalaxyLogo, GalaxyLogoMini } from './components/GalaxyLogo';
+import { DocxIDEView } from './components/ide/DocxIDEView';
 import { BuildModeView } from './components/BuildModeView';
 import { MediaStudioView } from './components/MediaStudioView';
 import { MultipleWorkersSettingsTab } from './components/MultipleWorkersSettingsTab';
@@ -1112,6 +1113,7 @@ export default function App() {
         <div key="view-landing" className="workspace-container animate-workspace-slide-in">
           <Landing
             launch={handleLaunchApp}
+            onEnterIDE={() => setView('ide')}
             settings={() => goSettings('provider')}
             privacy={() => setView('privacy')}
             about={() => setView('about')}
@@ -1360,8 +1362,8 @@ export default function App() {
                     <button className="playful-pop" onClick={() => setView('media')}>
                       <Film size={17} className="text-zinc-300" /> {t.mediaStudio}
                     </button>
-                    <button className="playful-pop" onClick={() => setView('build')}>
-                      <Hammer size={17} className="text-zinc-300" /> {t.buildMode}
+                    <button className="playful-pop" onClick={() => setView('ide')}>
+                      <Code2 size={17} className="text-blue-400" /> {t.ideMode || 'Docx-IDE'}
                     </button>
                     <button className="playful-pop" onClick={() => goSettings('workers')}>
                       <Users size={17} className="text-zinc-300" /> {t.multipleWorkers}
@@ -1905,6 +1907,7 @@ export default function App() {
                       widthClass={composerWidthClass}
                       alignClass={composerAlignClass}
                       isFloating={activePositions.composerPosition === 'floating'}
+                      onEnterIDE={() => setView('ide')}
                     />
                   </div>
                 );
@@ -2049,7 +2052,7 @@ export default function App() {
             back={() => setView('chat')}
             onAbout={() => setView('about')}
             onPrivacy={() => setView('privacy')}
-            onNavigateToBuild={() => setView('build')}
+            onNavigateToBuild={() => setView('ide')}
             onConnectDeveloper={() => setShowConnectModal(true)}
             onOpenPositionEditor={() => {
               setView('chat');
@@ -2080,14 +2083,12 @@ export default function App() {
         </div>
       )}
 
-      {view === 'build' && (
-        <div key="view-build" className="workspace-container animate-workspace-slide-in">
-          <BuildModeView
+      {(view === 'ide' || view === 'build') && (
+        <div key="view-ide" className="w-screen h-screen overflow-hidden">
+          <DocxIDEView
             providerConfig={providerConfig}
-            preferences={preferences}
-            onUpdatePreferences={updatePreferences}
             onLeave={() => setView('chat')}
-            onOpenSettings={(tab?: string) => goSettings((tab as any) || 'workers')}
+            onOpenSettings={(tab?: string) => goSettings((tab as any) || 'provider')}
             themeMode={currentThemeMode}
           />
         </div>
@@ -2157,6 +2158,7 @@ function SpaceBackground({ motion }: { motion: boolean }) {
 
 function Landing({
   launch,
+  onEnterIDE,
   settings,
   privacy,
   about,
@@ -2166,6 +2168,7 @@ function Landing({
   onSwitchThemeMode,
 }: {
   launch: () => void;
+  onEnterIDE?: () => void;
   settings: () => void;
   privacy: () => void;
   about: () => void;
@@ -2382,6 +2385,19 @@ function Landing({
             {t.privacy}
           </button>
           <button
+            onClick={() => onEnterIDE ? onEnterIDE() : launch()}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 border ${
+              isCandy
+                ? 'text-pink-700 hover:text-pink-900 bg-pink-100/80 hover:bg-pink-100 border-pink-300 shadow-xs'
+                : isDark
+                ? 'text-blue-300 hover:text-white bg-blue-950/40 hover:bg-blue-900/50 border-blue-500/35 shadow-xs'
+                : 'text-purple-200 hover:text-white bg-purple-950/50 hover:bg-purple-900/60 border-purple-500/40 shadow-xs'
+            }`}
+          >
+            <Code2 size={13} className={isCandy ? 'text-pink-600' : 'text-blue-400'} />
+            <span>Enter IDE</span>
+          </button>
+          <button
             onClick={launch}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 border ${
               isCandy
@@ -2584,9 +2600,11 @@ function Landing({
           onLaunch={launch}
           onSettings={settings}
           onOpenGuide={onOpenGuide}
+          onEnterIDE={onEnterIDE}
           launchLabel={t.launchWorkspace}
           settingsLabel={t.configureApiKeys}
           guideLabel={t.interactiveGuide}
+          enterIDELabel={t.enterIDE || 'Enter IDE'}
           themeMode={themeMode}
         />
 
@@ -3006,6 +3024,7 @@ function Composer({
   isRecordingVoice,
   onAttachFile,
   onOpenTokenSaver,
+  onEnterIDE,
   themeMode,
   widthClass,
   alignClass,
@@ -3023,6 +3042,7 @@ function Composer({
   isRecordingVoice: boolean;
   onAttachFile: () => void;
   onOpenTokenSaver: () => void;
+  onEnterIDE?: () => void;
   themeMode?: ThemeMode;
   widthClass?: string;
   alignClass?: string;
@@ -3100,6 +3120,21 @@ function Composer({
               <Sparkles size={13} className={isCandy ? 'text-pink-500' : 'text-zinc-300'} />
               <span>Prompt Library</span>
             </button>
+            {onEnterIDE && (
+              <button
+                type="button"
+                onClick={onEnterIDE}
+                className={`ribbon-pill ribbon-pill-ide playful-pop ${
+                  isCandy
+                    ? 'bg-gradient-to-r from-pink-500 to-amber-400 text-white font-bold border border-pink-400 shadow-xs'
+                    : 'bg-blue-600/20 hover:bg-blue-600/35 text-blue-300 hover:text-white border border-blue-500/40 font-semibold'
+                }`}
+                title="Enter Docx-IDE Development Environment"
+              >
+                <Code2 size={13} className={isCandy ? 'text-white' : 'text-blue-400'} />
+                <span>Enter IDE</span>
+              </button>
+            )}
           </div>
           <div className="composer-ribbon-right">
             <button

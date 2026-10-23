@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { ArrowUp, KeyRound, Terminal } from 'lucide-react';
+import { ArrowUp, KeyRound, Terminal, Code2 } from 'lucide-react';
 import type { ThemeMode } from '../types';
 
 interface CelestialCatTreeHeroProps {
   onLaunch: () => void;
   onSettings: () => void;
   onOpenGuide?: () => void;
+  onEnterIDE?: () => void;
   launchLabel: string;
   settingsLabel: string;
   guideLabel?: string;
+  enterIDELabel?: string;
   themeMode?: ThemeMode;
 }
 
@@ -23,9 +25,11 @@ export function CelestialCatTreeHero({
   onLaunch,
   onSettings,
   onOpenGuide,
+  onEnterIDE,
   launchLabel,
   settingsLabel,
   guideLabel = 'Interactive Guide',
+  enterIDELabel = 'Enter IDE',
   themeMode = 'halloween',
 }: CelestialCatTreeHeroProps) {
   const [purrToast, setPurrToast] = useState<string | null>(null);
@@ -567,6 +571,25 @@ export function CelestialCatTreeHero({
               <circle cx="8" cy="10" r="2" fill={themeMode === 'candy' ? '#fde047' : '#fef08a'} />
             </svg>
           </div>
+
+          {/* 1.5 "Enter IDE" Button (Docx-IDE) */}
+          {onEnterIDE && (
+            <div className="relative flex-1 min-w-[200px]">
+              <button
+                className={`w-full px-5 py-4 rounded-xl font-bold text-xs tracking-wider uppercase inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xl border ${
+                  themeMode === 'halloween'
+                    ? 'bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 hover:from-purple-800 hover:to-indigo-800 text-purple-100 border-purple-500/50 hover:border-purple-300 shadow-purple-950/60'
+                    : themeMode === 'candy'
+                    ? 'bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 hover:from-pink-500 hover:to-indigo-500 text-white border-pink-300 shadow-pink-200/50'
+                    : 'bg-[#181c2b] hover:bg-[#202538] border border-blue-500/40 hover:border-blue-400 text-white shadow-blue-950/40'
+                }`}
+                onClick={onEnterIDE}
+              >
+                <Code2 size={16} className={themeMode === 'candy' ? 'text-white' : 'text-blue-400'} />
+                <span>{enterIDELabel}</span>
+              </button>
+            </div>
+          )}
 
           {/* 2. "Configure API Keys" Button */}
           <div className="relative flex-1 min-w-[200px]">

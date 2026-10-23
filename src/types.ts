@@ -1,7 +1,7 @@
 import type { ProviderConfig } from './lib/credential';
 import type { ChatTurn } from './providers/types';
 
-export type View = 'landing' | 'chat' | 'settings' | 'privacy' | 'about' | 'build' | 'media';
+export type View = 'landing' | 'chat' | 'settings' | 'privacy' | 'about' | 'build' | 'media' | 'ide';
 
 export type Message = ChatTurn & {
   id: string;

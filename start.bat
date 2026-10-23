@@ -1,12 +1,16 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
+set "PORT=3000"
+set "URL=http://localhost:%PORT%"
+set "PROJECT_DIR=%~dp0"
 title VileDocx Web Launcher
 
-cd /d "%~dp0"
+cd /d "%PROJECT_DIR%"
 
 echo.
 echo  ============================================
 echo    VileDocx Web - starting up...
+echo    Project folder: %PROJECT_DIR%
 echo  ============================================
 echo.
 
@@ -29,7 +33,7 @@ REM ---- Install dependencies on first run ----
 if not exist "node_modules" (
     echo  [*] First run detected - installing dependencies ^(this can take a minute^)...
     echo.
-    call npm install
+    call npm install --no-fund --no-audit
     if errorlevel 1 (
         echo.
         echo  [X] npm install failed. Check your internet connection and try again.
@@ -43,19 +47,18 @@ if not exist "node_modules" (
 )
 
 REM ---- Free port 3000 if a stale server is holding it ----
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":3000 .*LISTENING"') do (
-    echo  [*] Port 3000 is in use by PID %%p - stopping it...
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"') do (
+    echo  [*] Port %PORT% is in use by PID %%p - stopping it...
     taskkill /PID %%p /F >nul 2>nul
 )
 
 REM ---- Start server and open browser ----
 echo  [OK] Starting server...
-start "" /min cmd /c "npm run dev > viledocx-server.log 2>&1"
+start "" /min cmd /c "cd /d ""%PROJECT_DIR%"" && npm run dev -- --host 0.0.0.0 --port %PORT% > viledocx-server.log 2>&1"
 
 REM Wait for the server to answer, then open the browser
 where curl >nul 2>nul
 if errorlevel 1 (
-    REM No curl on this machine: give the server a few seconds, then open anyway
     echo  [*] Waiting a few seconds for the server...
     timeout /t 6 /nobreak >nul
     goto openbrowser
@@ -66,10 +69,10 @@ set /a tries=0
 timeout /t 1 /nobreak >nul
 set /a tries+=1
 set "HTTP_CODE=000"
-curl -s -o nul -w "%%{http_code}" --max-time 2 http://localhost:3000 > "%TEMP%\viledocx_http.txt" 2>nul
+curl -s -o nul -w "%%{http_code}" --max-time 2 %URL% > "%TEMP%\viledocx_http.txt" 2>nul
 set /p HTTP_CODE=<"%TEMP%\viledocx_http.txt"
 if not "%HTTP_CODE%"=="200" (
-    if %tries% lss 30 goto waitloop
+    if %tries% lss 60 goto waitloop
     echo  [X] Server did not start in time. Check viledocx-server.log for details.
     pause
     exit /b 1
@@ -77,9 +80,9 @@ if not "%HTTP_CODE%"=="200" (
 
 :openbrowser
 
-echo  [OK] Server is live at http://localhost:3000
+echo  [OK] Server is live at %URL%
 echo  [OK] Opening in your browser...
-start "" "http://localhost:3000"
+start "" "%URL%"
 
 echo.
 echo  ============================================
@@ -90,7 +93,7 @@ echo  ============================================
 pause >nul
 
 echo  [*] Stopping server...
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":3000 .*LISTENING"') do (
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"') do (
     taskkill /PID %%p /F >nul 2>nul
 )
 echo  [OK] Server stopped.

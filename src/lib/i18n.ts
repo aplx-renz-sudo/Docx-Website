@@ -100,7 +100,9 @@ export const TRANSLATIONS = {
 
     // Sidebar items
     mediaStudio: 'Media Studio (Images & Video)',
-    buildMode: 'Build Mode',
+    buildMode: 'Docx-IDE',
+    ideMode: 'Docx-IDE',
+    enterIDE: 'Enter IDE',
     multipleWorkers: 'Multiple Workers (Alpha)',
     interactiveGuideItem: 'Interactive Guide',
     promptLibrary: 'Prompt Library',
@@ -220,7 +222,9 @@ export const TRANSLATIONS = {
 
     // Sidebar items
     mediaStudio: 'Media Studio (Bilder & Video)',
-    buildMode: 'Build-Modus',
+    buildMode: 'Docx-IDE',
+    ideMode: 'Docx-IDE',
+    enterIDE: 'IDE öffnen',
     multipleWorkers: 'Multiple Workers (Alpha)',
     interactiveGuideItem: 'Interaktiver Leitfaden',
     promptLibrary: 'Prompt-Bibliothek',
@@ -340,7 +344,9 @@ export const TRANSLATIONS = {
 
     // Sidebar items
     mediaStudio: 'मीडिया स्टूडियो (चित्र और वीडियो)',
-    buildMode: 'बिल्ड मोड',
+    buildMode: 'Docx-IDE',
+    ideMode: 'Docx-IDE',
+    enterIDE: 'Enter IDE (आईडीई खोलें)',
     multipleWorkers: 'मल्टीपल वर्कर्स (अल्फा)',
     interactiveGuideItem: 'इंटरैक्टिव गाइड',
     promptLibrary: 'प्रॉम्प्ट लाइब्रेरी',
@@ -460,7 +466,9 @@ export const TRANSLATIONS = {
 
     // Sidebar items
     mediaStudio: '媒体工作室 (图像与视频)',
-    buildMode: '构建模式',
+    buildMode: 'Docx-IDE',
+    ideMode: 'Docx-IDE',
+    enterIDE: '进入 IDE',
     multipleWorkers: '多工人蜂群 (Alpha)',
     interactiveGuideItem: '交互式指南',
     promptLibrary: '提示词库',
